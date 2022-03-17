@@ -6,7 +6,7 @@
   "scripts": {
     "add_built": "git add qb-fix-bilibili.user.js",
     "build": "rollup -c",
-    "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. .",
+    "format": "prettier --write --plugin-search-dir=. .",
     "lint": "eslint src"
   },
   "pre-commit": [

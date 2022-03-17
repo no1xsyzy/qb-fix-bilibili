@@ -48,18 +48,18 @@
   }
 
   function 关注栏尺寸 () {
-    GM_addStyle(`.section-content-cntr[data-v-649cf1f8]{height:calc(100vh - 250px)!important;}`);
+    GM_addStyle(`.section-content-cntr{height:calc(100vh - 250px)!important;}`);
 
     launchObserver({
-      selector: `#sidebar-vm .side-bar-popup-cntr.ts-dot-4`,
+      selector: `.side-bar-popup-cntr.ts-dot-4`,
       successCallback: () => {
-        const g = $`#sidebar-vm .side-bar-popup-cntr.ts-dot-4`;
+        const g = $`.side-bar-popup-cntr.ts-dot-4`;
         if (g.style.height !== '0px') {
           g.style.bottom = '75px';
           g.style.height = 'calc(100vh - 150px)';
           // g.style.height = "600px"
         }
-        setTimeout(() => $(`#sidebar-vm .side-bar-popup-cntr.ts-dot-4 .ps`).dispatchEvent(new Event('scroll')), 1000);
+        setTimeout(() => $(`.side-bar-popup-cntr.ts-dot-4 .ps`).dispatchEvent(new Event('scroll')), 1000);
       },
       stopWhenSuccess: false,
       config: {
@@ -140,7 +140,13 @@
     通用表情框尺寸修复();
   }
 
-  if (location.pathname === '/p/eden/area-tags') {
+  function 直播主页 () {
+    关注栏尺寸();
+  }
+
+  if (location.pathname === '/') {
+    直播主页();
+  } else if (location.pathname === '/p/eden/area-tags') {
     分区();
   } else if (/^\/\d+$/.exec(location.pathname)) {
     直播间();
