@@ -2,7 +2,7 @@
 // @name        qb-fix-bilibili
 // @description inQ_Beta wants to fix some of bilibili problem
 // @namespace   no1xsyzy
-// @match       https://live.bilibili.com/*
+// @match       https://*.bilibili.com/*
 // @license     Apache License, Version 2.0 (Apache-2.0); https://opensource.org/licenses/Apache-2.0
 // @version     0.0.5
 // @author      inQ_Beta
@@ -300,15 +300,36 @@
         });
     }
 
+    function 动态井号标签 () {
+        launchObserver({
+            parentNode: document.body,
+            selector: `a.dynamic-link-hover-bg`,
+            successCallback: () => {
+                for (let link of $$(`a.dynamic-link-hover-bg`)) {
+                    // link: HTMLAnchorElement
+                    if (/#.+#/.exec(link.innerHTML) && /https?:\/\/search.bilibili.com\/all\?.+/.exec(link.href)) {
+                        link.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(link.innerHTML)[1]}/feed`;
+                    }
+                }
+            },
+            stopWhenSuccess: false,
+        });
+    }
+
     function 直播间 () {
       关注栏尺寸();
       直播间标题();
       直播间留言者显示粉丝数();
       通用表情框尺寸修复();
+      动态井号标签();
     }
 
     function 直播主页 () {
       关注栏尺寸();
+    }
+
+    function 其他页面 () {
+      动态井号标签();
     }
 
     if (location.pathname === '/') {
@@ -317,6 +338,8 @@
       分区();
     } else if (/^\/\d+$/.exec(location.pathname)) {
       直播间();
+    } else {
+      其他页面();
     }
 
 })();
