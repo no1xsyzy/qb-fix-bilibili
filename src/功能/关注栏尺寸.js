@@ -13,7 +13,9 @@ export default function () {
         g.style.height = 'calc(100vh - 150px)'
         // g.style.height = "600px"
       }
-      setTimeout(() => $(`.side-bar-popup-cntr.ts-dot-4 .ps`).dispatchEvent(new Event('scroll')), 1000)
+      if ($(`.side-bar-popup-cntr.ts-dot-4 .ps`)) {
+        setTimeout(() => $(`.side-bar-popup-cntr.ts-dot-4 .ps`).dispatchEvent(new Event('scroll')), 1000)
+      }
     },
     stopWhenSuccess: false,
     config: {
