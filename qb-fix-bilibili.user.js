@@ -4,7 +4,7 @@
 // @namespace   no1xsyzy
 // @match       https://live.bilibili.com/*
 // @license     Apache License, Version 2.0 (Apache-2.0); https://opensource.org/licenses/Apache-2.0
-// @version     0.0.3
+// @version     0.0.4
 // @author      inQ_Beta
 // @grant       GM_addStyle
 // ==/UserScript==
