@@ -13,7 +13,7 @@ export function launchObserver({
   if (!parentNode) {
     parentNode = document.body
   }
-  const observeFunc = (mutationList) => {
+  const observeFunc = () => {
     const selected = document.querySelector(selector)
     if (!selected) {
       if (failCallback) {
