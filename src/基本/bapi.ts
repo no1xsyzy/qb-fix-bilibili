@@ -1,6 +1,6 @@
 import { timedLRU1 } from './cache'
 
-type UID = number | string
+type numstring = number | string
 
 interface Card {
   mid: string
@@ -16,7 +16,7 @@ interface Card {
   official_verify: { desc: string; type: number }
 }
 
-interface Data {
+interface CardData {
   card: Card
   following: boolean
   archive_count: number
@@ -25,10 +25,22 @@ interface Data {
   like_num: number
 }
 
-type Response = { code: 0; data: Data } | { code: -404; message: string }
+interface RelationInfo {
+  attention: number
+}
 
-export const getCard = timedLRU1(async (uid: UID) => {
-  const json: Response = await (
+interface AnchorInfo {
+  relation_info: RelationInfo
+}
+
+interface RoomInfoData {
+  anchor_info: AnchorInfo
+}
+
+type Response<T> = { code: 0; data: T; message: '' } | { code: number; message: string; data: null }
+
+export const getCard = timedLRU1(async (uid: numstring) => {
+  const json: Response<CardData> = await (
     await fetch(`https://api.bilibili.com/x/web-interface/card?mid=${uid}`, {
       // credentials: 'include',
       headers: {
@@ -45,11 +57,11 @@ export const getCard = timedLRU1(async (uid: UID) => {
   }
 })
 
-export const getFansCount = async (uid: UID) => {
+export const getFansCount = async (uid: numstring) => {
   return (await getCard(uid)).card.fans
 }
 
-export const getSexTag = async (uid: UID) => {
+export const getSexTag = async (uid: numstring) => {
   const sex = (await getCard(uid)).card.sex
   switch (sex) {
     case '男':
@@ -61,6 +73,38 @@ export const getSexTag = async (uid: UID) => {
   }
 }
 
-export const infoLine = async (uid: UID) => {
+export const infoLine = async (uid: numstring) => {
   return `${await getSexTag(uid)} ${await getFansCount(uid)}★ `
+}
+
+export const getInfoByRoom = timedLRU1(async (roomid: numstring) => {
+  const json: Response<RoomInfoData> = await (
+    await fetch(`https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=${roomid}`, {
+      // credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+      method: 'GET',
+      mode: 'cors',
+    })
+  ).json()
+  if (json.code === 0) {
+    return json.data
+  } else {
+    throw json.message
+  }
+})
+
+export const getRoomFollowers = async (roomid: numstring) => {
+  return (await getInfoByRoom(roomid)).anchor_info.relation_info.attention
+}
+
+export const followersTextClass = (followers: number): [string, string] => {
+  if (followers > 1e6) {
+    return [`${Math.round(followers / 1e5) / 10}m★`, 'followers-m']
+  } else if (followers > 1e3) {
+    return [`${Math.round(followers / 1e2) / 10}k★`, 'followers-k']
+  } else {
+    return [`${followers}★`, '']
+  }
 }

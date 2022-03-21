@@ -68,12 +68,12 @@
 
     const makeTitle$1 = () =>
       `${($`#area-tags header img+div` || $`#area-tags header h2`).innerText} - 分区列表 - 哔哩哔哩直播`;
-    const parentNode$2 = $`#area-tags`;
-    const selector$2 = `header`;
+    const parentNode$3 = $`#area-tags`;
+    const selector$3 = `header`;
     function 分区标题 () {
       launchObserver({
-        parentNode: parentNode$2,
-        selector: selector$2,
+        parentNode: parentNode$3,
+        selector: selector$3,
         successCallback: () => {
           document.title = makeTitle$1();
         },
@@ -81,53 +81,6 @@
       });
 
       document.title = makeTitle$1();
-    }
-
-    function 分区 () {
-      关注栏尺寸();
-      分区标题();
-    }
-
-    function liveStatus() {
-      switch ($`.live-status`.innerText) {
-        case '直播':
-          return '▶️'
-        case '闲置':
-          return '⏹️'
-        case '轮播':
-          return '🔁'
-        default:
-          return `【${$`.live-status`.innerText}】`
-      }
-    }
-
-    const liveTitle = () => $`.live-title`.innerText;
-    const liveHost = () => $`.room-owner-username`.innerText;
-    const makeTitle = () => `${liveStatus()} ${liveTitle()} - ${liveHost()} - 哔哩哔哩直播`;
-    const parentNode$1 = $`#head-info-vm .left-header-area`;
-    const selector$1 = `.live-title`;
-
-    function 直播间标题 () {
-      launchObserver({
-        parentNode: parentNode$1,
-        selector: selector$1,
-        successCallback: () => {
-          document.title = makeTitle();
-        },
-        stopWhenSuccess: false,
-      });
-
-      document.title = makeTitle();
-    }
-
-    function 通用表情框尺寸修复 () {
-      GM_addStyle(`
-#control-panel-ctnr-box > .border-box.top-left[style^="transform-origin: 249px "],
-#control-panel-ctnr-box > .border-box.top-left[style^="transform-origin: 251px "]
-{
-  height: 700px
-}
-`);
     }
 
     const TTL = 10 * 60 * 1000;
@@ -193,6 +146,121 @@
                 return '〼';
         }
     };
+    const getInfoByRoom = timedLRU1(async (roomid) => {
+        const json = await (await fetch(`https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=${roomid}`, {
+            // credentials: 'include',
+            headers: {
+                Accept: 'application/json',
+            },
+            method: 'GET',
+            mode: 'cors',
+        })).json();
+        if (json.code === 0) {
+            return json.data;
+        }
+        else {
+            throw json.message;
+        }
+    });
+    const getRoomFollowers = async (roomid) => {
+        return (await getInfoByRoom(roomid)).anchor_info.relation_info.attention;
+    };
+    const followersTextClass = (followers) => {
+        if (followers > 1e6) {
+            return [`${Math.round(followers / 1e5) / 10}m★`, 'followers-m'];
+        }
+        else if (followers > 1e3) {
+            return [`${Math.round(followers / 1e2) / 10}k★`, 'followers-k'];
+        }
+        else {
+            return [`${followers}★`, ''];
+        }
+    };
+
+    const parentNode$2 = $(`#area-tag-list`);
+    const selector$2 = `a.Item_1EohdhbR`;
+    GM_addStyle(`
+.processed::after {
+  content: attr(data-followers);
+  color: white;
+}
+.processed.followers-m::before{
+  color: purple;
+}
+.processed.followers-k::before{
+  color: red;
+}
+`);
+    function 分区添加粉丝数 () {
+        launchObserver({
+            parentNode: parentNode$2,
+            selector: selector$2,
+            successCallback: () => {
+                for (const a of $$(`a.Item_1EohdhbR`)) {
+                    (async () => {
+                        const nametag = a.querySelector(`.Item_QAOnosoB`);
+                        if (nametag.classList.contains('processed')) {
+                            return;
+                        }
+                        const followers = await getRoomFollowers(a.pathname.slice(1));
+                        let [txt, cls] = followersTextClass(followers);
+                        nametag.dataset.followers = txt;
+                        nametag.classList.add('processed');
+                        nametag.classList.add(cls);
+                    })();
+                }
+            },
+            stopWhenSuccess: false,
+        });
+    }
+
+    function 分区 () {
+      关注栏尺寸();
+      分区标题();
+      分区添加粉丝数();
+    }
+
+    function liveStatus() {
+      switch ($`.live-status`.innerText) {
+        case '直播':
+          return '▶️'
+        case '闲置':
+          return '⏹️'
+        case '轮播':
+          return '🔁'
+        default:
+          return `【${$`.live-status`.innerText}】`
+      }
+    }
+
+    const liveTitle = () => $`.live-title`.innerText;
+    const liveHost = () => $`.room-owner-username`.innerText;
+    const makeTitle = () => `${liveStatus()} ${liveTitle()} - ${liveHost()} - 哔哩哔哩直播`;
+    const parentNode$1 = $`#head-info-vm .left-header-area`;
+    const selector$1 = `.live-title`;
+
+    function 直播间标题 () {
+      launchObserver({
+        parentNode: parentNode$1,
+        selector: selector$1,
+        successCallback: () => {
+          document.title = makeTitle();
+        },
+        stopWhenSuccess: false,
+      });
+
+      document.title = makeTitle();
+    }
+
+    function 通用表情框尺寸修复 () {
+      GM_addStyle(`
+#control-panel-ctnr-box > .border-box.top-left[style^="transform-origin: 249px "],
+#control-panel-ctnr-box > .border-box.top-left[style^="transform-origin: 251px "]
+{
+  height: 700px
+}
+`);
+    }
 
     const parentNode = $(`#chat-items`);
     const selector = `.user-name`;
@@ -200,27 +268,21 @@
   content: attr(data-infoline);
   color: white;
 }
-.infoline.infoline-m::before{
-  color: red;
+.infoline.followers-m::before{
+  color: purple;
 }
-.infoline.infoline-k::before{
-  color: pink;
+.infoline.followers-k::before{
+  color: red;
 }
 `);
     const append = async (un) => {
         un.classList.add('infoline');
         const uid = un.parentNode.dataset.uid;
-        let fans = await getFansCount(uid);
-        if (fans > 1e6) {
-            fans = `${Math.round(fans / 1e5) / 10}m`;
-            un.classList.add('infoline-m');
-        }
-        else if (fans > 1e3) {
-            fans = `${Math.round(fans / 1e2) / 10}k`;
-            un.classList.add('infoline-k');
-        }
+        const fans = await getFansCount(uid);
+        const [txt, cls] = followersTextClass(fans);
         const sextag = await getSexTag(uid);
-        un.dataset.infoline = `${sextag} ${fans}★ `;
+        un.dataset.infoline = `${sextag} ${txt} `;
+        un.classList.add(cls);
     };
     function 直播间留言者显示粉丝数 () {
         launchObserver({

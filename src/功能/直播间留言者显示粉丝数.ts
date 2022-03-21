@@ -1,6 +1,6 @@
 import { $, $$ } from '../基本/selector'
 import { launchObserver } from '../基本/observer'
-import { getSexTag, getFansCount } from '../基本/bapi'
+import { getSexTag, getFansCount, followersTextClass } from '../基本/bapi'
 
 const parentNode = $(`#chat-items`)
 const selector = `.user-name`
@@ -9,27 +9,22 @@ GM_addStyle(`.infoline::before{
   content: attr(data-infoline);
   color: white;
 }
-.infoline.infoline-m::before{
-  color: red;
+.infoline.followers-m::before{
+  color: purple;
 }
-.infoline.infoline-k::before{
-  color: pink;
+.infoline.followers-k::before{
+  color: red;
 }
 `)
 
 const append = async (un: HTMLElement) => {
   un.classList.add('infoline')
   const uid = (un.parentNode as HTMLElement).dataset.uid
-  let fans: string | number = await getFansCount(uid)
-  if (fans > 1e6) {
-    fans = `${Math.round(fans / 1e5) / 10}m`
-    un.classList.add('infoline-m')
-  } else if (fans > 1e3) {
-    fans = `${Math.round(fans / 1e2) / 10}k`
-    un.classList.add('infoline-k')
-  }
+  const fans: string | number = await getFansCount(uid)
+  const [txt, cls] = followersTextClass(fans)
   const sextag = await getSexTag(uid)
-  un.dataset.infoline = `${sextag} ${fans}★ `
+  un.dataset.infoline = `${sextag} ${txt} `
+  un.classList.add(cls)
 }
 
 export default function () {
