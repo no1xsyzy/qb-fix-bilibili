@@ -197,14 +197,14 @@
     const parentNode = $(`#chat-items`);
     const selector = `.user-name`;
     GM_addStyle(`.infoline::before{
-  content: attr(data-infoline)
-  font-color: white
+  content: attr(data-infoline);
+  color: white;
 }
 .infoline.infoline-m::before{
-  font-color: red
+  color: red;
 }
 .infoline.infoline-k::before{
-  font-color: pink
+  color: pink;
 }
 `);
     const append = async (un) => {
