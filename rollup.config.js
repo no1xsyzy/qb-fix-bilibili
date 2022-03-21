@@ -1,4 +1,5 @@
 import metablock from 'rollup-plugin-userscript-metablock'
+import typescript from '@rollup/plugin-typescript'
 
 const pkg = require('./package.json')
 
@@ -20,6 +21,6 @@ export default {
     format: 'iife',
     globals: {},
   },
-  plugins: [metab],
+  plugins: [metab, typescript()],
   external: [],
 }
