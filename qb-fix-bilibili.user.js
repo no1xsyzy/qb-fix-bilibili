@@ -213,7 +213,7 @@
             successCallback: () => {
                 for (const un of $$(`#chat-items .user-name`)) {
                     if (un.classList.contains('infoline')) {
-                        return;
+                        continue;
                     }
                     append(un);
                 }
