@@ -12,6 +12,7 @@
     'use strict';
 
     const $ = (x) => document.querySelector(x);
+    const $$ = (x) => Array.from(document.querySelectorAll(x));
 
     function launchObserver({ parentNode, selector, failCallback = null, successCallback = null, stopWhenSuccess = true, config = {
         childList: true,
@@ -65,12 +66,12 @@
 
     const makeTitle$1 = () =>
       `${($`#area-tags header img+div` || $`#area-tags header h2`).innerText} - 分区列表 - 哔哩哔哩直播`;
-    const parentNode$1 = $`#area-tags`;
-    const selector$1 = `header`;
+    const parentNode$2 = $`#area-tags`;
+    const selector$2 = `header`;
     function 分区标题 () {
       launchObserver({
-        parentNode: parentNode$1,
-        selector: selector$1,
+        parentNode: parentNode$2,
+        selector: selector$2,
         successCallback: () => {
           document.title = makeTitle$1();
         },
@@ -101,13 +102,13 @@
     const liveTitle = () => $`.live-title`.innerText;
     const liveHost = () => $`.room-owner-username`.innerText;
     const makeTitle = () => `${liveStatus()} ${liveTitle()} - ${liveHost()} - 哔哩哔哩直播`;
-    const parentNode = $`#head-info-vm .left-header-area`;
-    const selector = `.live-title`;
+    const parentNode$1 = $`#head-info-vm .left-header-area`;
+    const selector$1 = `.live-title`;
 
     function 直播间标题 () {
       launchObserver({
-        parentNode,
-        selector,
+        parentNode: parentNode$1,
+        selector: selector$1,
         successCallback: () => {
           document.title = makeTitle();
         },
@@ -127,9 +128,102 @@
 `);
     }
 
+    const TTL = 10 * 60 * 1000;
+    function timedLRU1(func) {
+        const cache = new Map();
+        let time = [];
+        let timeout = null;
+        const cleanup = () => {
+            if (timeout !== null) {
+                clearTimeout(timeout);
+            }
+            const ts = new Date().getTime();
+            const idx = time.findIndex(([a, t]) => t + TTL > ts);
+            const drop = time.splice(idx);
+            for (const [a] of drop) {
+                cache.delete(a);
+            }
+            timeout = setTimeout(cleanup, 60 * 1000);
+        };
+        return (a1) => {
+            const got = cache.get(a1);
+            if (got !== undefined) {
+                const ts = new Date().getTime();
+                time = [[a1, ts], ...time.filter(([a, t]) => a !== a1)];
+                cleanup();
+                return got;
+            }
+            const val = func(a1);
+            const ts = new Date().getTime();
+            time = [[a1, ts], ...time];
+            cache.set(a1, val);
+            return val;
+        };
+    }
+
+    const getCard = timedLRU1(async (uid) => {
+        const json = await (await fetch(`https://api.bilibili.com/x/web-interface/card?mid=${uid}`, {
+            // credentials: 'include',
+            headers: {
+                Accept: 'application/json',
+            },
+            method: 'GET',
+            mode: 'cors',
+        })).json();
+        if (json.code === 0) {
+            return json.data;
+        }
+        else {
+            throw json.message;
+        }
+    });
+    const getFansCount = async (uid) => {
+        return (await getCard(uid)).card.fans;
+    };
+    const getSexTag = async (uid) => {
+        const sex = (await getCard(uid)).card.sex;
+        switch (sex) {
+            case '男':
+                return '♂';
+            case '女':
+                return '♀';
+            default:
+                return '〼';
+        }
+    };
+    const infoLine = async (uid) => {
+        return `${await getSexTag(uid)} ${await getFansCount(uid)}★ `;
+    };
+
+    const parentNode = $(`#chat-items`);
+    const selector = `.user-name`;
+    GM_addStyle(`.infoline::before{
+  content: attr(data-infoline)
+}`);
+    const append = async (un) => {
+        un.classList.add('infoline');
+        un.dataset.infoline = await infoLine(un.parentNode.dataset.uid);
+    };
+    function 直播间留言者显示粉丝数 () {
+        launchObserver({
+            parentNode,
+            selector,
+            successCallback: () => {
+                for (const un of $$(`#chat-items .user-name`)) {
+                    if (un.classList.contains('infoline')) {
+                        return;
+                    }
+                    append(un);
+                }
+            },
+            stopWhenSuccess: false,
+        });
+    }
+
     function 直播间 () {
       关注栏尺寸();
       直播间标题();
+      直播间留言者显示粉丝数();
       通用表情框尺寸修复();
     }
 
