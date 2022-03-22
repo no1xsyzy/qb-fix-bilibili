@@ -7,7 +7,7 @@ if (location.pathname === '/') {
   直播主页()
 } else if (location.pathname === '/p/eden/area-tags') {
   分区()
-} else if (/^\/\d+$/.exec(location.pathname)) {
+} else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)) {
   直播间()
 } else {
   其他页面()

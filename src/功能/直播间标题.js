@@ -17,18 +17,24 @@ function liveStatus() {
 const liveTitle = () => $`.live-title`.innerText
 const liveHost = () => $`.room-owner-username`.innerText
 const makeTitle = () => `${liveStatus()} ${liveTitle()} - ${liveHost()} - 哔哩哔哩直播`
-const parentNode = $`#head-info-vm .left-header-area`
 const selector = `.live-title`
 
 export default function () {
   launchObserver({
-    parentNode,
-    selector,
+    parentNode: null,
+    selector: `#head-info-vm .left-header-area`,
     successCallback: () => {
+      const parentNode = $`#head-info-vm .left-header-area`
+      launchObserver({
+        parentNode,
+        selector,
+        successCallback: () => {
+          document.title = makeTitle()
+        },
+        stopWhenSuccess: false,
+      })
       document.title = makeTitle()
     },
     stopWhenSuccess: false,
   })
-
-  document.title = makeTitle()
 }

@@ -66,11 +66,11 @@
 
     const makeTitle$1 = () =>
       `${($`#area-tags header img+div` || $`#area-tags header h2`).innerText} - 分区列表 - 哔哩哔哩直播`;
-    const parentNode$3 = $`#area-tags`;
+    const parentNode$2 = $`#area-tags`;
     const selector$3 = `header`;
     function 分区标题 () {
       launchObserver({
-        parentNode: parentNode$3,
+        parentNode: parentNode$2,
         selector: selector$3,
         successCallback: () => {
           document.title = makeTitle$1();
@@ -175,7 +175,7 @@
         }
     };
 
-    const parentNode$2 = $(`#area-tag-list`);
+    const parentNode$1 = $(`#area-tag-list`);
     const selector$2 = `a.Item_1EohdhbR`;
     GM_addStyle(`
 .processed::after {
@@ -191,7 +191,7 @@
 `);
     function 分区添加粉丝数 () {
         launchObserver({
-            parentNode: parentNode$2,
+            parentNode: parentNode$1,
             selector: selector$2,
             successCallback: () => {
                 for (const a of $$(`a.Item_1EohdhbR`)) {
@@ -234,20 +234,26 @@
     const liveTitle = () => $`.live-title`.innerText;
     const liveHost = () => $`.room-owner-username`.innerText;
     const makeTitle = () => `${liveStatus()} ${liveTitle()} - ${liveHost()} - 哔哩哔哩直播`;
-    const parentNode$1 = $`#head-info-vm .left-header-area`;
     const selector$1 = `.live-title`;
 
     function 直播间标题 () {
       launchObserver({
-        parentNode: parentNode$1,
-        selector: selector$1,
+        parentNode: null,
+        selector: `#head-info-vm .left-header-area`,
         successCallback: () => {
+          const parentNode = $`#head-info-vm .left-header-area`;
+          launchObserver({
+            parentNode,
+            selector: selector$1,
+            successCallback: () => {
+              document.title = makeTitle();
+            },
+            stopWhenSuccess: false,
+          });
           document.title = makeTitle();
         },
         stopWhenSuccess: false,
       });
-
-      document.title = makeTitle();
     }
 
     function 通用表情框尺寸修复 () {
@@ -334,7 +340,7 @@
       直播主页();
     } else if (location.pathname === '/p/eden/area-tags') {
       分区();
-    } else if (/^\/\d+$/.exec(location.pathname)) {
+    } else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)) {
       直播间();
     } else {
       其他页面();
