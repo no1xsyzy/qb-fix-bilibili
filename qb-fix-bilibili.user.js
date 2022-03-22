@@ -53,9 +53,7 @@
             g.style.height = 'calc(100vh - 150px)';
             // g.style.height = "600px"
           }
-          if ($(`.side-bar-popup-cntr.ts-dot-4 .ps`)) {
-            setTimeout(() => $(`.side-bar-popup-cntr.ts-dot-4 .ps`).dispatchEvent(new Event('scroll')), 1000);
-          }
+          setTimeout(() => $(`.side-bar-popup-cntr.ts-dot-4 .ps`)?.dispatchEvent(new Event('scroll')), 1000);
         },
         stopWhenSuccess: false,
         config: {
