@@ -4,16 +4,20 @@
   "description": "inQ_Beta wants to fix some of bilibili problem",
   "main": "src/main.js",
   "scripts": {
-    "add_built": "git add qb-fix-bilibili.user.js",
+    "add_update": "git add --update",
     "build": "rollup -c",
     "format": "prettier --write --plugin-search-dir=. .",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "stash_unstaged": "git stash --keep-index --include-untracked",
+    "stash_pop": "git stash pop"
   },
   "pre-commit": [
+    "stash_unstaged",
     "format",
     "lint",
     "build",
-    "add_built"
+    "add_update",
+    "stash_pop"
   ],
   "author": "inQ_Beta",
   "license": "Apache-2.0",
