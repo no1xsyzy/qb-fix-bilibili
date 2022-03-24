@@ -12,7 +12,6 @@
     'use strict';
 
     const $ = (x) => document.querySelector(x);
-    const $$ = (x) => Array.from(document.querySelectorAll(x));
 
     function launchObserver({ parentNode, selector, failCallback = null, successCallback = null, stopWhenSuccess = true, config = {
         childList: true,
@@ -20,10 +19,10 @@
     }, }) {
         // if parent node does not exist, use body instead
         if (!parentNode) {
-            parentNode = document.body;
+            parentNode = document;
         }
         const observeFunc = () => {
-            const selected = document.querySelector(selector);
+            const selected = parentNode.querySelector(selector);
             if (!selected) {
                 if (failCallback) {
                     failCallback();
@@ -34,34 +33,67 @@
                 observer.disconnect();
             }
             if (successCallback) {
-                successCallback(selected);
+                console.debug(`launchObserver: observed ${selector}`, selected);
+                successCallback({
+                    selected,
+                    selectAll() {
+                        return Array.from(parentNode.querySelectorAll(selector));
+                    },
+                    disconnect() {
+                        observer.disconnect();
+                    },
+                });
             }
         };
         const observer = new MutationObserver(observeFunc);
         observer.observe(parentNode, config);
     }
+    function elementEmerge(selector, parentNode) {
+        return new Promise((resolve) => {
+            launchObserver({
+                parentNode,
+                selector,
+                successCallback: ({ selected }) => {
+                    console.debug(`elementEmerge: ${selector} emerged as`, selected);
+                    resolve(selected);
+                },
+            });
+        });
+    }
 
-    function 关注栏尺寸 () {
-      GM_addStyle(`.section-content-cntr{height:calc(100vh - 250px)!important;}`);
-
-      launchObserver({
-        selector: `.side-bar-popup-cntr.ts-dot-4`,
-        successCallback: () => {
-          const g = $`.side-bar-popup-cntr.ts-dot-4`;
-          if (g.style.height !== '0px') {
-            g.style.bottom = '75px';
-            g.style.height = 'calc(100vh - 150px)';
-            // g.style.height = "600px"
-          }
-          setTimeout(() => $(`.side-bar-popup-cntr.ts-dot-4 .ps`)?.dispatchEvent(new Event('scroll')), 1000);
-        },
-        stopWhenSuccess: false,
-        config: {
-          childList: true,
-          subtree: true,
-          attributes: true,
-        },
-      });
+    async function 关注栏尺寸 () {
+        GM_addStyle(`.section-content-cntr{height:calc(100vh - 250px)!important;}`);
+        const selector = (() => {
+            if (location.pathname === '/') {
+                return `.flying-vm`;
+            }
+            else if (location.pathname === '/p/eden/area-tags') {
+                return `#area-tags`;
+            }
+            else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)) {
+                return `#sidebar-vm`;
+            }
+        })();
+        launchObserver({
+            parentNode: await elementEmerge(selector),
+            selector: `.side-bar-popup-cntr.ts-dot-4`,
+            successCallback: ({ selected }) => {
+                console.debug('关注栏尺寸 osbc in');
+                if (selected.style.height !== '0px') {
+                    selected.style.bottom = '75px';
+                    selected.style.height = 'calc(100vh - 150px)';
+                    // selected.style.height = "600px"
+                }
+                setTimeout(() => $(`.side-bar-popup-cntr.ts-dot-4 .ps`)?.dispatchEvent(new Event('scroll')), 1000);
+                console.debug('关注栏尺寸 osbc out');
+            },
+            stopWhenSuccess: false,
+            config: {
+                childList: true,
+                subtree: true,
+                attributes: true,
+            },
+        });
     }
 
     const makeTitle$1 = () => `${($(`#area-tags header img+div`) || $(`#area-tags header h2`)).innerText} - 分区列表 - 哔哩哔哩直播`;
@@ -191,8 +223,8 @@
         launchObserver({
             parentNode: parentNode$1,
             selector: selector$2,
-            successCallback: () => {
-                for (const a of $$(`a.Item_1EohdhbR`)) {
+            successCallback: ({ selectAll }) => {
+                for (const a of selectAll()) {
                     (async () => {
                         const nametag = a.querySelector(`.Item_QAOnosoB`);
                         if (nametag.classList.contains('processed')) {
@@ -217,41 +249,33 @@
     }
 
     function liveStatus() {
-      switch ($`.live-status`.innerText) {
-        case '直播':
-          return '▶️'
-        case '闲置':
-          return '⏹️'
-        case '轮播':
-          return '🔁'
-        default:
-          return `【${$`.live-status`.innerText}】`
-      }
+        switch ($(`.live-status`).innerText) {
+            case '直播':
+                return '▶️';
+            case '闲置':
+                return '⏹️';
+            case '轮播':
+                return '🔁';
+            default:
+                return `【${$(`.live-status`).innerText}】`;
+        }
     }
-
-    const liveTitle = () => $`.live-title`.innerText;
-    const liveHost = () => $`.room-owner-username`.innerText;
+    const liveTitle = () => $(`.live-title`).innerText;
+    const liveHost = () => $(`.room-owner-username`).innerText;
     const makeTitle = () => `${liveStatus()} ${liveTitle()} - ${liveHost()} - 哔哩哔哩直播`;
     const selector$1 = `.live-title`;
-
-    function 直播间标题 () {
-      launchObserver({
-        parentNode: null,
-        selector: `#head-info-vm .left-header-area`,
-        successCallback: () => {
-          const parentNode = $`#head-info-vm .left-header-area`;
-          launchObserver({
-            parentNode,
+    async function 直播间标题 () {
+        launchObserver({
+            parentNode: await elementEmerge(`#head-info-vm .left-header-area`),
             selector: selector$1,
             successCallback: () => {
-              document.title = makeTitle();
+                console.debug('直播间标题 osbc in');
+                document.title = makeTitle();
+                console.debug('直播间标题 osbc out');
             },
             stopWhenSuccess: false,
-          });
-          document.title = makeTitle();
-        },
-        stopWhenSuccess: false,
-      });
+        });
+        document.title = makeTitle();
     }
 
     function 通用表情框尺寸修复 () {
@@ -290,29 +314,35 @@
         launchObserver({
             parentNode,
             selector,
-            successCallback: () => {
-                for (const un of $$(`#chat-items .user-name`)) {
+            successCallback: ({ selectAll }) => {
+                console.debug('直播间留言者显示粉丝数 osbc in');
+                for (const un of selectAll()) {
                     if (un.classList.contains('infoline')) {
                         continue;
                     }
                     append(un);
                 }
+                console.debug('直播间留言者显示粉丝数 osbc out');
             },
             stopWhenSuccess: false,
         });
     }
 
-    function 动态井号标签 () {
+    async function 动态井号标签 () {
         launchObserver({
-            parentNode: document.body,
+            parentNode: /^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)
+                ? await elementEmerge(`.room-feed-content`)
+                : document.body,
             selector: `a.dynamic-link-hover-bg`,
-            successCallback: () => {
-                for (let link of $$(`a.dynamic-link-hover-bg`)) {
+            successCallback: ({ selectAll }) => {
+                console.debug('动态井号标签 oscb in');
+                for (let link of selectAll()) {
                     // link: HTMLAnchorElement
                     if (/#.+#/.exec(link.innerHTML) && /https?:\/\/search.bilibili.com\/all\?.+/.exec(link.href)) {
                         link.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(link.innerHTML)[1]}/feed`;
                     }
                 }
+                console.debug('动态井号标签 oscb out');
             },
             stopWhenSuccess: false,
         });

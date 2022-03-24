@@ -31,13 +31,15 @@ export default function () {
   launchObserver({
     parentNode,
     selector,
-    successCallback: () => {
-      for (const un of $$(`#chat-items .user-name`)) {
+    successCallback: ({ selectAll }) => {
+      console.debug('直播间留言者显示粉丝数 osbc in')
+      for (const un of selectAll()) {
         if (un.classList.contains('infoline')) {
           continue
         }
-        append(un as HTMLElement)
+        append(un)
       }
+      console.debug('直播间留言者显示粉丝数 osbc out')
     },
     stopWhenSuccess: false,
   })

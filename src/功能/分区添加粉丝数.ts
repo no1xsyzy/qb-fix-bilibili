@@ -22,8 +22,8 @@ export default function () {
   launchObserver({
     parentNode,
     selector,
-    successCallback: () => {
-      for (const a of $$(`a.Item_1EohdhbR`)) {
+    successCallback: ({ selectAll }) => {
+      for (const a of selectAll()) {
         ;(async () => {
           const nametag: HTMLElement = a.querySelector(`.Item_QAOnosoB`)
           if (nametag.classList.contains('processed')) {
