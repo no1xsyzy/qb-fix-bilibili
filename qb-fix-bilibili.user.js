@@ -107,40 +107,68 @@
         document.title = makeTitle$1();
     }
 
-    const TTL = 10 * 60 * 1000;
-    function timedLRU1(func) {
-        const cache = new Map();
-        let time = [];
+    function defaultCacheStorageFactory(id) {
+        let store = [];
+        const get = (key) => store.filter(([k, t, v]) => k === key).map(([k, t, v]) => [t, v])[0] ?? [0, undefined];
+        const set = (key, time, value) => {
+            const i = store.findIndex(([k, t, v]) => k === key);
+            if (i === -1) {
+                store.push([key, time, value]);
+            }
+            else {
+                store[i] = [key, time, value];
+            }
+        };
+        const cleanup = (ttl, now) => {
+            store = store.filter(([k, t]) => t + ttl > now);
+        };
+        return { get, set, cleanup };
+    }
+    function timedLRU(func, { id, ttl = 10 * 60 * 1000, cleanup_interval = 60 * 1000, cacheStorageFactory = defaultCacheStorageFactory, }) {
+        const cacheStorage = cacheStorageFactory(id);
         let timeout = null;
         const cleanup = () => {
             if (timeout !== null) {
                 clearTimeout(timeout);
             }
-            const ts = new Date().getTime();
-            const idx = time.findIndex(([a, t]) => t + TTL > ts);
-            const drop = time.splice(idx);
-            for (const [a] of drop) {
-                cache.delete(a);
-            }
-            timeout = setTimeout(cleanup, 60 * 1000);
+            cacheStorage.cleanup(ttl, new Date().getTime());
+            timeout = setTimeout(cleanup, cleanup_interval);
         };
-        return (a1) => {
-            const got = cache.get(a1);
-            if (got !== undefined) {
-                const ts = new Date().getTime();
-                time = [[a1, ts], ...time.filter(([a, t]) => a !== a1)];
-                cleanup();
-                return got;
+        cleanup();
+        const wrapped = async (k) => {
+            const t = new Date().getTime();
+            let [_, v] = cacheStorage.get(k);
+            if (v === undefined) {
+                v = await func(k);
             }
-            const val = func(a1);
-            const ts = new Date().getTime();
-            time = [[a1, ts], ...time];
-            cache.set(a1, val);
-            return val;
+            cacheStorage.set(k, t, v);
+            return v;
         };
+        wrapped.cleanup = cleanup;
+        return wrapped;
     }
 
-    const getCard = timedLRU1(async (uid) => {
+    function localStorage_CacheStorageFactory(id) {
+        const get = (key) => JSON.parse(localStorage.getItem(`cacheStore__${id}__${key}`)) ?? [0, undefined];
+        const set = (key, time, value) => {
+            localStorage.setItem(`cacheStore__${id}__${key}`, JSON.stringify([time, value]));
+        };
+        const cleanup = (ttl, now) => {
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (!k.startsWith(`cacheStore__${id}__`)) {
+                    continue;
+                }
+                const [t, v] = JSON.parse(localStorage.getItem(k));
+                if (t + ttl < now) {
+                    localStorage.removeItem(k);
+                }
+            }
+        };
+        return { get, set, cleanup };
+    }
+
+    const getCard = timedLRU(async (uid) => {
         const json = await (await fetch(`https://api.bilibili.com/x/web-interface/card?mid=${uid}`, {
             // credentials: 'include',
             headers: {
@@ -155,6 +183,10 @@
         else {
             throw json.message;
         }
+    }, {
+        id: 'getCard',
+        ttl: 86400 * 1000,
+        cacheStorageFactory: localStorage_CacheStorageFactory,
     });
     const getFansCount = async (uid) => {
         return (await getCard(uid)).card.fans;
@@ -170,7 +202,7 @@
                 return '〼';
         }
     };
-    const getInfoByRoom = timedLRU1(async (roomid) => {
+    const getInfoByRoom = timedLRU(async (roomid) => {
         const json = await (await fetch(`https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=${roomid}`, {
             // credentials: 'include',
             headers: {
@@ -185,6 +217,10 @@
         else {
             throw json.message;
         }
+    }, {
+        id: 'getInfoByRoom',
+        ttl: 86400 * 1000,
+        cacheStorageFactory: localStorage_CacheStorageFactory,
     });
     const getRoomFollowers = async (roomid) => {
         return (await getInfoByRoom(roomid)).anchor_info.relation_info.attention;
