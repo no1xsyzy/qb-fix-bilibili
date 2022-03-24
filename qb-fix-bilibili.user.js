@@ -64,21 +64,19 @@
       });
     }
 
-    const makeTitle$1 = () =>
-      `${($`#area-tags header img+div` || $`#area-tags header h2`).innerText} - 分区列表 - 哔哩哔哩直播`;
-    const parentNode$2 = $`#area-tags`;
+    const makeTitle$1 = () => `${($(`#area-tags header img+div`) || $(`#area-tags header h2`)).innerText} - 分区列表 - 哔哩哔哩直播`;
+    const parentNode$2 = $(`#area-tags`);
     const selector$3 = `header`;
     function 分区标题 () {
-      launchObserver({
-        parentNode: parentNode$2,
-        selector: selector$3,
-        successCallback: () => {
-          document.title = makeTitle$1();
-        },
-        stopWhenSuccess: false,
-      });
-
-      document.title = makeTitle$1();
+        launchObserver({
+            parentNode: parentNode$2,
+            selector: selector$3,
+            successCallback: () => {
+                document.title = makeTitle$1();
+            },
+            stopWhenSuccess: false,
+        });
+        document.title = makeTitle$1();
     }
 
     const TTL = 10 * 60 * 1000;
