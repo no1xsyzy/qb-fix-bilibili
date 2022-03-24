@@ -24,7 +24,7 @@ const append = async (un: HTMLElement) => {
   const [txt, cls] = followersTextClass(fans)
   const sextag = await getSexTag(uid)
   un.dataset.infoline = `${sextag} ${txt} `
-  un.classList.add(cls)
+  if (cls !== '') un.classList.add(cls)
 }
 
 export default function () {

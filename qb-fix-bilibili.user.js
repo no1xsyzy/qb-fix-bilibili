@@ -338,7 +338,8 @@
         const [txt, cls] = followersTextClass(fans);
         const sextag = await getSexTag(uid);
         un.dataset.infoline = `${sextag} ${txt} `;
-        un.classList.add(cls);
+        if (cls !== '')
+            un.classList.add(cls);
     };
     function 直播间留言者显示粉丝数 () {
         launchObserver({
