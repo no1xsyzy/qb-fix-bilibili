@@ -1,4 +1,4 @@
-import { $, $$ } from '../基本/selector'
+import { $ } from '../基本/selector'
 import { launchObserver } from '../基本/observer'
 import { followersTextClass, getRoomFollowers } from 'src/基本/bapi'
 
@@ -8,12 +8,12 @@ const selector = `a.Item_1EohdhbR`
 GM_addStyle(`
 .processed::after {
   content: attr(data-followers);
-  color: white;
+  color: black;
 }
-.processed.followers-m::before{
+.processed.followers-m::after{
   color: purple;
 }
-.processed.followers-k::before{
+.processed.followers-k::after{
   color: red;
 }
 `)
