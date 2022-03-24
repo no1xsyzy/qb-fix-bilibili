@@ -33,7 +33,6 @@
                 observer.disconnect();
             }
             if (successCallback) {
-                console.debug(`launchObserver: observed ${selector}`, selected);
                 successCallback({
                     selected,
                     selectAll() {
@@ -54,7 +53,6 @@
                 parentNode,
                 selector,
                 successCallback: ({ selected }) => {
-                    console.debug(`elementEmerge: ${selector} emerged as`, selected);
                     resolve(selected);
                 },
             });
@@ -78,14 +76,12 @@
             parentNode: await elementEmerge(selector),
             selector: `.side-bar-popup-cntr.ts-dot-4`,
             successCallback: ({ selected }) => {
-                console.debug('关注栏尺寸 osbc in');
                 if (selected.style.height !== '0px') {
                     selected.style.bottom = '75px';
                     selected.style.height = 'calc(100vh - 150px)';
                     // selected.style.height = "600px"
                 }
                 setTimeout(() => $(`.side-bar-popup-cntr.ts-dot-4 .ps`)?.dispatchEvent(new Event('scroll')), 1000);
-                console.debug('关注栏尺寸 osbc out');
             },
             stopWhenSuccess: false,
             config: {
@@ -269,9 +265,7 @@
             parentNode: await elementEmerge(`#head-info-vm .left-header-area`),
             selector: selector$1,
             successCallback: () => {
-                console.debug('直播间标题 osbc in');
                 document.title = makeTitle();
-                console.debug('直播间标题 osbc out');
             },
             stopWhenSuccess: false,
         });
@@ -315,14 +309,12 @@
             parentNode,
             selector,
             successCallback: ({ selectAll }) => {
-                console.debug('直播间留言者显示粉丝数 osbc in');
                 for (const un of selectAll()) {
                     if (un.classList.contains('infoline')) {
                         continue;
                     }
                     append(un);
                 }
-                console.debug('直播间留言者显示粉丝数 osbc out');
             },
             stopWhenSuccess: false,
         });
@@ -335,14 +327,12 @@
                 : document.body,
             selector: `a.dynamic-link-hover-bg`,
             successCallback: ({ selectAll }) => {
-                console.debug('动态井号标签 oscb in');
                 for (let link of selectAll()) {
                     // link: HTMLAnchorElement
                     if (/#.+#/.exec(link.innerHTML) && /https?:\/\/search.bilibili.com\/all\?.+/.exec(link.href)) {
                         link.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(link.innerHTML)[1]}/feed`;
                     }
                 }
-                console.debug('动态井号标签 oscb out');
             },
             stopWhenSuccess: false,
         });

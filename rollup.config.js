@@ -22,6 +22,8 @@ export default (commandLineArgs) => ({
     format: 'iife',
     globals: {},
   },
-  plugins: commandLineArgs.debug ? [metab, typescript()] : [strip(), metab, typescript()],
+  plugins: commandLineArgs.configDebug
+    ? [metab, typescript()]
+    : [metab, typescript(), strip({ include: ['**/*.js', '**/*.ts'] })],
   external: [],
 })
