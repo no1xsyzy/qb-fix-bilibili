@@ -364,12 +364,16 @@
       动态井号标签();
     }
 
-    if (location.pathname === '/') {
-      直播主页();
-    } else if (location.pathname === '/p/eden/area-tags') {
-      分区();
-    } else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)) {
-      直播间();
+    if (location.host === 'live.bilibili.com') {
+      if (location.pathname === '/') {
+        直播主页();
+      } else if (location.pathname === '/p/eden/area-tags') {
+        分区();
+      } else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)) {
+        直播间();
+      } else {
+        其他页面();
+      }
     } else {
       其他页面();
     }
