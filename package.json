@@ -6,12 +6,14 @@
   "scripts": {
     "add_update": "git add --update",
     "build": "rollup -c",
+    "clean": "git checkout qb-fix-bilibili.user.js",
     "format": "prettier --write --plugin-search-dir=. .",
     "lint": "eslint src",
     "stash_unstaged": "git stash --keep-index --include-untracked",
     "stash_pop": "git stash pop"
   },
   "pre-commit": [
+    "clean",
     "stash_unstaged",
     "format",
     "lint",
