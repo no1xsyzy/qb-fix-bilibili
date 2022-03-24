@@ -1,5 +1,6 @@
 import metablock from 'rollup-plugin-userscript-metablock'
 import typescript from '@rollup/plugin-typescript'
+import strip from 'rollup-plugin-strip'
 
 const pkg = require('./package.json')
 
@@ -14,13 +15,13 @@ const metab = metablock({
   },
 })
 
-export default {
+export default (commandLineArgs) => ({
   input: 'src/main.js',
   output: {
     file: 'qb-fix-bilibili.user.js',
     format: 'iife',
     globals: {},
   },
-  plugins: [metab, typescript()],
+  plugins: commandLineArgs.debug ? [metab, typescript()] : [strip(), metab, typescript()],
   external: [],
-}
+})
