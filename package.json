@@ -1,6 +1,6 @@
 {
   "name": "qb-fix-bilibili",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "inQ_Beta wants to fix some of bilibili problem",
   "main": "src/main.js",
   "scripts": {
