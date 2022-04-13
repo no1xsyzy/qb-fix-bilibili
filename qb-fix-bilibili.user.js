@@ -107,6 +107,18 @@
         document.title = makeTitle$1();
     }
 
+    const followersTextClass = (followers) => {
+        if (followers > 1e6) {
+            return [`${Math.round(followers / 1e5) / 10}m★`, 'followers-m'];
+        }
+        else if (followers > 1e3) {
+            return [`${Math.round(followers / 1e2) / 10}k★`, 'followers-k'];
+        }
+        else {
+            return [`${followers}★`, ''];
+        }
+    };
+
     function defaultCacheStorageFactory(id) {
         let store = [];
         const get = (key) => store.filter(([k, t, v]) => k === key).map(([k, t, v]) => [t, v])[0] ?? [0, undefined];
@@ -202,6 +214,7 @@
                 return '〼';
         }
     };
+
     const getInfoByRoom = timedLRU(async (roomid) => {
         const json = await (await fetch(`https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=${roomid}`, {
             // credentials: 'include',
@@ -224,17 +237,6 @@
     });
     const getRoomFollowers = async (roomid) => {
         return (await getInfoByRoom(roomid)).anchor_info.relation_info.attention;
-    };
-    const followersTextClass = (followers) => {
-        if (followers > 1e6) {
-            return [`${Math.round(followers / 1e5) / 10}m★`, 'followers-m'];
-        }
-        else if (followers > 1e3) {
-            return [`${Math.round(followers / 1e2) / 10}k★`, 'followers-k'];
-        }
-        else {
-            return [`${followers}★`, ''];
-        }
     };
 
     const parentNode$1 = $(`#area-tag-list`);

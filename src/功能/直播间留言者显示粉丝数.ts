@@ -1,6 +1,7 @@
 import { $, $$ } from '../基本/selector'
 import { launchObserver } from '../基本/observer'
-import { getSexTag, getFansCount, followersTextClass } from '../基本/bapi'
+import { getSexTag, getFansCount } from '../基本/bapi'
+import { followersTextClass } from '../基本/followersTextClass'
 
 const parentNode = $(`#chat-items`)
 const selector = `.user-name`
@@ -20,7 +21,7 @@ GM_addStyle(`.infoline::before{
 const append = async (un: HTMLElement) => {
   un.classList.add('infoline')
   const uid = (un.parentNode as HTMLElement).dataset.uid
-  const fans: string | number = await getFansCount(uid)
+  const fans: number = await getFansCount(uid)
   const [txt, cls] = followersTextClass(fans)
   const sextag = await getSexTag(uid)
   un.dataset.infoline = `${sextag} ${txt} `
