@@ -5,3 +5,4 @@ export type RoomID = number | string
 
 export { getCard, getFansCount, getSexTag } from './getCard'
 export { getInfoByRoom, getRoomFollowers } from './getInfoByRoom'
+export { getDynamicFeed } from './getDynamicFeed'

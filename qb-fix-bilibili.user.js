@@ -239,6 +239,127 @@
         return (await getInfoByRoom(roomid)).anchor_info.relation_info.attention;
     };
 
+    async function* getDynamicFeed({ timezone = -480, type = 'all', }) {
+        let page = 1;
+        let json = await (await fetch(`https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all?timezone_offset=${timezone}&type=${type}&page=${page}`, {
+            credentials: 'include',
+            headers: {
+                Accept: 'application/json',
+            },
+            method: 'GET',
+            mode: 'cors',
+        })).json();
+        if (json.code === 0) {
+            for (const item of json.data.items) {
+                yield item;
+            }
+        }
+        else {
+            throw json.message;
+        }
+        while (json.data.has_more) {
+            page += 1;
+            json = await (await fetch(`https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all?timezone_offset=${timezone}&type=${type}&offset=${json.data.offset}&page=${page}`, {
+                credentials: 'include',
+                headers: {
+                    Accept: 'application/json',
+                },
+                method: 'GET',
+                mode: 'cors',
+            })).json();
+            if (json.code === 0) {
+                for (const item of json.data.items) {
+                    yield item;
+                }
+            }
+            else {
+                throw json.message;
+            }
+        }
+    }
+    function compareDynamicID(a, b) {
+        if (a === b)
+            return 0;
+        if (a.length < b.length)
+            return -1;
+        if (a.length > b.length)
+            return 1;
+        if (a < b)
+            return -1;
+        if (a > b)
+            return 1;
+    }
+    function recordDynamicFeed(spec) {
+        const registry = [];
+        const gen = getDynamicFeed(spec);
+        const extend = async (n = 1) => {
+            for (let i = 0; i < n; i++) {
+                let v;
+                try {
+                    v = (await gen.next()).value;
+                }
+                catch (err) {
+                }
+                if (v) {
+                    registry.push(v);
+                }
+                else {
+                    return false;
+                }
+            }
+            return true;
+        };
+        const getByIndex = async (i) => {
+            while (registry.length < i && (await extend())) { }
+            if (registry.length > i) {
+                return registry[i];
+            }
+        };
+        const lastVisibleDynamic = () => {
+            for (let i = registry.length - 1; i >= 0; i--) {
+                if (registry[i].visible) {
+                    return registry[i];
+                }
+            }
+            return null;
+        };
+        const getByDynamicID = async (did) => {
+            if (!registry.length && !(await extend())) {
+                return null;
+            }
+            do {
+                if (registry[registry.length - 1].id_str == did) {
+                    return registry[registry.length - 1];
+                }
+                if (compareDynamicID(lastVisibleDynamic().id_str, did) < 0) {
+                    for (const dyn of registry) {
+                        if (dyn.id_str == did) {
+                            return dyn;
+                        }
+                    }
+                    return null;
+                }
+            } while (await extend());
+        };
+        const getByBVID = async (bvid) => {
+            if (spec.type == 'article') {
+                return null;
+            }
+            for (const dyn of registry) {
+                if (dyn.modules.module_dynamic.major.archive.bvid === bvid) {
+                    return dyn;
+                }
+            }
+            do {
+                if (lastVisibleDynamic()?.modules.module_dynamic.major.archive.bvid === bvid) {
+                    return lastVisibleDynamic();
+                }
+            } while (await extend());
+            return null;
+        };
+        return { getByIndex, getByDynamicID, getByBVID };
+    }
+
     const parentNode$1 = $(`#area-tag-list`);
     const selector$2 = `a.Item_1EohdhbR`;
     GM_addStyle(`
@@ -393,6 +514,46 @@
       动态井号标签();
     }
 
+    async function 动态首页联合投稿具名 () {
+        const record = recordDynamicFeed({ type: 'video' });
+        launchObserver({
+            parentNode: document.body,
+            selector: `div.bili-dyn-item`,
+            successCallback: async ({ selectAll }) => {
+                for (let dyn_item of selectAll()) {
+                    if (dyn_item.dataset.qfb_expanded_did == 'processing') {
+                        return;
+                    }
+                    if (dyn_item.dataset.qfb_expanded_did && !dyn_item.querySelector(`.bili-dyn-item-fold`)) {
+                        dyn_item.dataset.qfb_expanded_did == 'processing';
+                        const dyn = await record.getByDynamicID(dyn_item.querySelector(`.bili-dyn-card-video`).getAttribute('dyn-id'));
+                        const timediv = dyn_item.querySelector(`.bili-dyn-time`);
+                        timediv.innerHTML = `${dyn.modules.module_author.pub_time} · ${dyn.modules.module_author.pub_action}`;
+                        delete dyn_item.dataset.qfb_expanded_did;
+                    }
+                    else if (!dyn_item.dataset.qfb_expanded_did && dyn_item.querySelector(`.bili-dyn-item-fold`)) {
+                        dyn_item.dataset.qfb_expanded_did == 'processing';
+                        const dyn = await record.getByDynamicID(dyn_item.querySelector(`.bili-dyn-card-video`).getAttribute('dyn-id'));
+                        const timediv = dyn_item.querySelector(`.bili-dyn-time`);
+                        if (!dyn.modules.module_fold)
+                            return;
+                        let description = (await Promise.all(dyn.modules.module_fold.ids.map((did) => record.getByDynamicID(did))))
+                            .map((dyn) => `<a href="${dyn.modules.module_author.jump_url}">${dyn.modules.module_author.name}</a>`)
+                            .join(`、`);
+                        timediv.innerHTML = `${dyn.modules.module_author.pub_time} · 与${description}联合创作`;
+                        dyn_item.dataset.qfb_expanded_did = dyn.id_str;
+                    }
+                }
+            },
+            stopWhenSuccess: false,
+        });
+    }
+
+    function 动态页面 () {
+      动态井号标签();
+      动态首页联合投稿具名();
+    }
+
     if (location.host === 'live.bilibili.com') {
       if (location.pathname === '/') {
         直播主页();
@@ -403,6 +564,8 @@
       } else {
         其他页面();
       }
+    } else if (location.host === 't.bilibili.com') {
+      动态页面();
     } else {
       其他页面();
     }
