@@ -146,7 +146,7 @@
             cacheStorage.cleanup(ttl, new Date().getTime());
             timeout = setTimeout(cleanup, cleanup_interval);
         };
-        cleanup();
+        setTimeout(cleanup, cleanup_interval / 10);
         const wrapped = async (k) => {
             const t = new Date().getTime();
             let [_, v] = cacheStorage.get(k);

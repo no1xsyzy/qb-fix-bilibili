@@ -57,7 +57,7 @@ export function timedLRU<K, V>(
     timeout = setTimeout(cleanup, cleanup_interval)
   }
 
-  cleanup()
+  setTimeout(cleanup, cleanup_interval / 10)
 
   const wrapped = async (k: K) => {
     const t = new Date().getTime()
