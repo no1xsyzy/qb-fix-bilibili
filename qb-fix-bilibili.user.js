@@ -498,12 +498,28 @@
         });
     }
 
+    async function 自动刷新崩溃直播间 () {
+        const player = $(`#live-player`);
+        const trace = (...prefix) => (x) => (x);
+        const video = elementEmerge(`video`, player).then(trace('自动刷新崩溃直播间', 'video'));
+        const ending_panel = elementEmerge(`.web-player-ending-panel`, player).then(trace('自动刷新崩溃直播间', 'ending_panel'));
+        const error_panel = elementEmerge(`.web-player-error-panel`, player).then(trace('自动刷新崩溃直播间', 'error_panel'));
+        const last = await Promise.race([video, ending_panel, error_panel]);
+        if (last.tagName === 'VIDEO') {
+            return;
+        }
+        error_panel.then(() => {
+            location.reload();
+        });
+    }
+
     function 直播间 () {
       关注栏尺寸();
       直播间标题();
       直播间留言者显示粉丝数();
       通用表情框尺寸修复();
       动态井号标签();
+      自动刷新崩溃直播间();
     }
 
     function 直播主页 () {
