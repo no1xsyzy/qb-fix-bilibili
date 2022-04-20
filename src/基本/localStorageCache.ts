@@ -1,6 +1,6 @@
 import type { cacheStorage } from './cache'
 
-export function localStorage_CacheStorageFactory<K, V extends Json>(id: string): cacheStorage<K, V> {
+export function localStorageCacheStorageFactory<K, V extends Json>(id: string): cacheStorage<K, V> {
   const get = (key: K): [number, V] => JSON.parse(localStorage.getItem(`cacheStore__${id}__${key}`)) ?? [0, undefined]
   const set = (key: K, time: number, value: V) => {
     localStorage.setItem(`cacheStore__${id}__${key}`, JSON.stringify([time, value]))

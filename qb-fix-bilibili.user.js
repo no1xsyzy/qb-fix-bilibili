@@ -135,7 +135,7 @@
         };
         return { get, set, cleanup };
     }
-    function timedLRU(func, { id, ttl = 10 * 60 * 1000, cleanup_interval = 60 * 1000, cacheStorageFactory = defaultCacheStorageFactory, }) {
+    function timedLRU(func, { id, ttl = 10 * 60 * 1000, cleanupInterval = 60 * 1000, cacheStorageFactory = defaultCacheStorageFactory, }) {
         const cacheStorage = cacheStorageFactory(id);
         let timeout = null;
         const cleanup = () => {
@@ -143,9 +143,9 @@
                 clearTimeout(timeout);
             }
             cacheStorage.cleanup(ttl, new Date().getTime());
-            timeout = setTimeout(cleanup, cleanup_interval);
+            timeout = setTimeout(cleanup, cleanupInterval);
         };
-        setTimeout(cleanup, cleanup_interval / 10);
+        setTimeout(cleanup, cleanupInterval / 10);
         const wrapped = async (k) => {
             const t = new Date().getTime();
             let [_, v] = cacheStorage.get(k);
@@ -159,7 +159,7 @@
         return wrapped;
     }
 
-    function localStorage_CacheStorageFactory(id) {
+    function localStorageCacheStorageFactory(id) {
         const get = (key) => JSON.parse(localStorage.getItem(`cacheStore__${id}__${key}`)) ?? [0, undefined];
         const set = (key, time, value) => {
             localStorage.setItem(`cacheStore__${id}__${key}`, JSON.stringify([time, value]));
@@ -197,7 +197,7 @@
     }, {
         id: 'getCard',
         ttl: 86400 * 1000,
-        cacheStorageFactory: localStorage_CacheStorageFactory,
+        cacheStorageFactory: localStorageCacheStorageFactory,
     });
     const getFansCount = async (uid) => {
         return (await getCard(uid)).card.fans;
@@ -232,7 +232,7 @@
     }, {
         id: 'getInfoByRoom',
         ttl: 86400 * 1000,
-        cacheStorageFactory: localStorage_CacheStorageFactory,
+        cacheStorageFactory: localStorageCacheStorageFactory,
     });
     const getRoomFollowers = async (roomid) => {
         return (await getInfoByRoom(roomid)).anchor_info.relation_info.attention;
@@ -309,7 +309,10 @@
             return true;
         };
         const getByIndex = async (i) => {
-            while (registry.length < i && (await extend())) { }
+            while (registry.length < i) {
+                if (!(await extend()))
+                    break;
+            }
             if (registry.length > i) {
                 return registry[i];
             }
@@ -327,12 +330,12 @@
                 return null;
             }
             do {
-                if (registry[registry.length - 1].id_str == did) {
+                if (registry[registry.length - 1].id_str === did) {
                     return registry[registry.length - 1];
                 }
                 if (compareDynamicID(lastVisibleDynamic().id_str, did) < 0) {
                     for (const dyn of registry) {
-                        if (dyn.id_str == did) {
+                        if (dyn.id_str === did) {
                             return dyn;
                         }
                     }
@@ -341,7 +344,7 @@
             } while (await extend());
         };
         const getByBVID = async (bvid) => {
-            if (spec.type == 'article') {
+            if (spec.type === 'article') {
                 return null;
             }
             for (const dyn of registry) {
@@ -385,7 +388,7 @@
                             return;
                         }
                         const followers = await getRoomFollowers(a.pathname.slice(1));
-                        let [txt, cls] = followersTextClass(followers);
+                        const [txt, cls] = followersTextClass(followers);
                         nametag.dataset.followers = txt;
                         nametag.classList.add('processed');
                         nametag.classList.add(cls);
@@ -397,9 +400,9 @@
     }
 
     function 分区 () {
-      关注栏尺寸();
-      分区标题();
-      分区添加粉丝数();
+        关注栏尺寸();
+        分区标题();
+        分区添加粉丝数();
     }
 
     function liveStatus() {
@@ -490,7 +493,7 @@
                 : document.body,
             selector: `a.dynamic-link-hover-bg`,
             successCallback: ({ selectAll }) => {
-                for (let link of selectAll()) {
+                for (const link of selectAll()) {
                     // link: HTMLAnchorElement
                     if (/#.+#/.exec(link.innerHTML) && /https?:\/\/search.bilibili.com\/all\?.+/.exec(link.href)) {
                         link.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(link.innerHTML)[1]}/feed`;
@@ -503,34 +506,33 @@
 
     async function 自动刷新崩溃直播间 () {
         const player = $(`#live-player`);
-        const trace = (...prefix) => (x) => (x);
-        const video = elementEmerge(`video`, player).then(trace('自动刷新崩溃直播间', 'video'));
-        const ending_panel = elementEmerge(`.web-player-ending-panel`, player).then(trace('自动刷新崩溃直播间', 'ending_panel'));
-        const error_panel = elementEmerge(`.web-player-error-panel`, player).then(trace('自动刷新崩溃直播间', 'error_panel'));
-        const last = await Promise.race([video, ending_panel, error_panel]);
+        const video = elementEmerge(`video`, player).then((x) => trace('自动刷新崩溃直播间 video', x));
+        const endingPanel = elementEmerge(`.web-player-ending-panel`, player).then((x) => trace('自动刷新崩溃直播间 ending_panel', x));
+        const errorPanel = elementEmerge(`.web-player-error-panel`, player).then((x) => trace('自动刷新崩溃直播间 error_panel', x));
+        const last = await Promise.race([video, endingPanel, errorPanel]);
         if (last.tagName === 'VIDEO') {
             return;
         }
-        error_panel.then(() => {
+        errorPanel.then(() => {
             location.reload();
         });
     }
 
     function 直播间 () {
-      关注栏尺寸();
-      直播间标题();
-      直播间留言者显示粉丝数();
-      通用表情框尺寸修复();
-      动态井号标签();
-      自动刷新崩溃直播间();
+        关注栏尺寸();
+        直播间标题();
+        直播间留言者显示粉丝数();
+        通用表情框尺寸修复();
+        动态井号标签();
+        自动刷新崩溃直播间();
     }
 
     function 直播主页 () {
-      关注栏尺寸();
+        关注栏尺寸();
     }
 
     function 其他页面 () {
-      动态井号标签();
+        动态井号标签();
     }
 
     async function 动态首页联合投稿具名 () {
@@ -539,28 +541,28 @@
             parentNode: document.body,
             selector: `div.bili-dyn-item`,
             successCallback: async ({ selectAll }) => {
-                for (let dyn_item of selectAll()) {
-                    if (dyn_item.dataset.qfb_expanded_did == 'processing') {
+                for (const dynItem of selectAll()) {
+                    if (dynItem.dataset.qfb_expanded_did === 'processing') {
                         return;
                     }
-                    if (dyn_item.dataset.qfb_expanded_did && !dyn_item.querySelector(`.bili-dyn-item-fold`)) {
-                        dyn_item.dataset.qfb_expanded_did == 'processing';
-                        const dyn = await record.getByDynamicID(dyn_item.querySelector(`.bili-dyn-card-video`).getAttribute('dyn-id'));
-                        const timediv = dyn_item.querySelector(`.bili-dyn-time`);
+                    if (dynItem.dataset.qfb_expanded_did && !dynItem.querySelector(`.bili-dyn-item-fold`)) {
+                        dynItem.dataset.qfb_expanded_did = 'processing';
+                        const dyn = await record.getByDynamicID(dynItem.querySelector(`.bili-dyn-card-video`).getAttribute('dyn-id'));
+                        const timediv = dynItem.querySelector(`.bili-dyn-time`);
                         timediv.innerHTML = `${dyn.modules.module_author.pub_time} · ${dyn.modules.module_author.pub_action}`;
-                        delete dyn_item.dataset.qfb_expanded_did;
+                        delete dynItem.dataset.qfb_expanded_did;
                     }
-                    else if (!dyn_item.dataset.qfb_expanded_did && dyn_item.querySelector(`.bili-dyn-item-fold`)) {
-                        dyn_item.dataset.qfb_expanded_did == 'processing';
-                        const dyn = await record.getByDynamicID(dyn_item.querySelector(`.bili-dyn-card-video`).getAttribute('dyn-id'));
-                        const timediv = dyn_item.querySelector(`.bili-dyn-time`);
+                    else if (!dynItem.dataset.qfb_expanded_did && dynItem.querySelector(`.bili-dyn-item-fold`)) {
+                        dynItem.dataset.qfb_expanded_did = 'processing';
+                        const dyn = await record.getByDynamicID(dynItem.querySelector(`.bili-dyn-card-video`).getAttribute('dyn-id'));
+                        const timediv = dynItem.querySelector(`.bili-dyn-time`);
                         if (!dyn.modules.module_fold)
                             return;
-                        let description = (await Promise.all(dyn.modules.module_fold.ids.map((did) => record.getByDynamicID(did))))
+                        const description = (await Promise.all(dyn.modules.module_fold.ids.map((did) => record.getByDynamicID(did))))
                             .map((dyn) => `<a href="${dyn.modules.module_author.jump_url}">${dyn.modules.module_author.name}</a>`)
                             .join(`、`);
                         timediv.innerHTML = `${dyn.modules.module_author.pub_time} · 与${description}联合创作`;
-                        dyn_item.dataset.qfb_expanded_did = dyn.id_str;
+                        dynItem.dataset.qfb_expanded_did = dyn.id_str;
                     }
                 }
             },
@@ -569,24 +571,29 @@
     }
 
     function 动态页面 () {
-      动态井号标签();
-      动态首页联合投稿具名();
+        动态井号标签();
+        动态首页联合投稿具名();
     }
 
     if (location.host === 'live.bilibili.com') {
-      if (location.pathname === '/') {
-        直播主页();
-      } else if (location.pathname === '/p/eden/area-tags') {
-        分区();
-      } else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)) {
-        直播间();
-      } else {
+        if (location.pathname === '/') {
+            直播主页();
+        }
+        else if (location.pathname === '/p/eden/area-tags') {
+            分区();
+        }
+        else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)) {
+            直播间();
+        }
+        else {
+            其他页面();
+        }
+    }
+    else if (location.host === 't.bilibili.com') {
+        动态页面();
+    }
+    else {
         其他页面();
-      }
-    } else if (location.host === 't.bilibili.com') {
-      动态页面();
-    } else {
-      其他页面();
     }
 
 })();

@@ -141,7 +141,9 @@ export function recordDynamicFeed(spec?: DynamicFeedGetSpec): DynamicFeedRecord 
   }
 
   const getByIndex = async (i: number): Promise<Dynamic | null> => {
-    while (registry.length < i && (await extend())) {}
+    while (registry.length < i) {
+      if (!(await extend())) break
+    }
     if (registry.length > i) {
       return registry[i]
     }
@@ -164,13 +166,13 @@ export function recordDynamicFeed(spec?: DynamicFeedGetSpec): DynamicFeedRecord 
     }
     do {
       console.debug(`getByDynamicID(${did}): registry:`, JSON.parse(JSON.stringify(registry)))
-      if (registry[registry.length - 1].id_str == did) {
+      if (registry[registry.length - 1].id_str === did) {
         console.debug(`getByDynamicID(${did}): found at ${registry.length - 1}`)
         return registry[registry.length - 1]
       }
       if (compareDynamicID(lastVisibleDynamic().id_str, did) < 0) {
         for (const dyn of registry) {
-          if (dyn.id_str == did) {
+          if (dyn.id_str === did) {
             console.debug(`getByDynamicID(${did}): found in dones`)
             return dyn
           }
@@ -182,7 +184,7 @@ export function recordDynamicFeed(spec?: DynamicFeedGetSpec): DynamicFeedRecord 
   }
 
   const getByBVID = async (bvid: BVID): Promise<Dynamic | null> => {
-    if (spec.type == 'article') {
+    if (spec.type === 'article') {
       return null
     }
     for (const dyn of registry) {

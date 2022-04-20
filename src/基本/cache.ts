@@ -9,7 +9,7 @@ export type cacheStorageFactory<K, V> = (id: string) => cacheStorage<K, V>
 export interface timedLRUSpec<K, V> {
   id: string
   ttl?: number
-  cleanup_interval?: number
+  cleanupInterval?: number
   cacheStorageFactory?: cacheStorageFactory<K, V>
 }
 
@@ -41,7 +41,7 @@ export function timedLRU<K, V>(
   {
     id,
     ttl = 10 * 60 * 1000,
-    cleanup_interval = 60 * 1000,
+    cleanupInterval = 60 * 1000,
     cacheStorageFactory = defaultCacheStorageFactory,
   }: timedLRUSpec<K, V>,
 ): LRUfunction<K, Promise<V>> {
@@ -54,10 +54,10 @@ export function timedLRU<K, V>(
       clearTimeout(timeout)
     }
     cacheStorage.cleanup(ttl, new Date().getTime())
-    timeout = setTimeout(cleanup, cleanup_interval)
+    timeout = setTimeout(cleanup, cleanupInterval)
   }
 
-  setTimeout(cleanup, cleanup_interval / 10)
+  setTimeout(cleanup, cleanupInterval / 10)
 
   const wrapped = async (k: K) => {
     const t = new Date().getTime()

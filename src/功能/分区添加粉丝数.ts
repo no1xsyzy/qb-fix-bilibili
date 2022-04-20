@@ -31,7 +31,7 @@ export default function () {
             return
           }
           const followers = await getRoomFollowers((a as HTMLAnchorElement).pathname.slice(1))
-          let [txt, cls] = followersTextClass(followers)
+          const [txt, cls] = followersTextClass(followers)
           nametag.dataset.followers = txt
           nametag.classList.add('processed')
           nametag.classList.add(cls)

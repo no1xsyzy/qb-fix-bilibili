@@ -1,6 +1,18 @@
 import { cacheStorageFactory, timedLRU } from '../cache'
-import { localStorage_CacheStorageFactory } from '../localStorageCache'
+import { localStorageCacheStorageFactory } from '../localStorageCache'
 import type { RoomID, Response } from './index'
+
+interface RelationInfo {
+  attention: number
+}
+
+interface AnchorInfo {
+  relation_info: RelationInfo
+}
+
+interface RoomInfoData {
+  anchor_info: AnchorInfo
+}
 
 export const getInfoByRoom = timedLRU<RoomID, RoomInfoData>(
   async (roomid: RoomID) => {
@@ -23,22 +35,10 @@ export const getInfoByRoom = timedLRU<RoomID, RoomInfoData>(
   {
     id: 'getInfoByRoom',
     ttl: 86400 * 1000,
-    cacheStorageFactory: localStorage_CacheStorageFactory as cacheStorageFactory<RoomID, RoomInfoData>,
+    cacheStorageFactory: localStorageCacheStorageFactory as cacheStorageFactory<RoomID, RoomInfoData>,
   },
 )
 
 export const getRoomFollowers = async (roomid: RoomID) => {
   return (await getInfoByRoom(roomid)).anchor_info.relation_info.attention
-}
-
-interface RelationInfo {
-  attention: number
-}
-
-interface AnchorInfo {
-  relation_info: RelationInfo
-}
-
-interface RoomInfoData {
-  anchor_info: AnchorInfo
 }

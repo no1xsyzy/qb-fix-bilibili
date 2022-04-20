@@ -16,7 +16,7 @@ const metab = metablock({
 })
 
 export default (commandLineArgs) => {
-  const input = 'src/main.js'
+  const input = 'src/main.ts'
   const output = {
     file: 'qb-fix-bilibili.user.js',
     format: 'iife',

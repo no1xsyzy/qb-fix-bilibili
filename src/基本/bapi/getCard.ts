@@ -1,5 +1,5 @@
 import { cacheStorageFactory, timedLRU } from '../cache'
-import { localStorage_CacheStorageFactory } from '../localStorageCache'
+import { localStorageCacheStorageFactory } from '../localStorageCache'
 import type { UserID, Response } from './index'
 
 interface Card {
@@ -46,7 +46,7 @@ export const getCard = timedLRU<UserID, CardData>(
   {
     id: 'getCard',
     ttl: 86400 * 1000,
-    cacheStorageFactory: localStorage_CacheStorageFactory as cacheStorageFactory<UserID, CardData>,
+    cacheStorageFactory: localStorageCacheStorageFactory as cacheStorageFactory<UserID, CardData>,
   },
 )
 

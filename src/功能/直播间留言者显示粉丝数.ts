@@ -1,4 +1,4 @@
-import { $, $$ } from '../基本/selector'
+import { $ } from '../基本/selector'
 import { launchObserver } from '../基本/observer'
 import { getSexTag, getFansCount } from '../基本/bapi'
 import { followersTextClass } from '../基本/followersTextClass'
