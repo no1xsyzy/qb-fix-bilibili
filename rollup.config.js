@@ -15,15 +15,24 @@ const metab = metablock({
   },
 })
 
-export default (commandLineArgs) => ({
-  input: 'src/main.js',
-  output: {
+export default (commandLineArgs) => {
+  const input = 'src/main.js'
+  const output = {
     file: 'qb-fix-bilibili.user.js',
     format: 'iife',
     globals: {},
-  },
-  plugins: commandLineArgs.configDebug
-    ? [metab, typescript()]
-    : [metab, typescript(), strip({ include: ['**/*.js', '**/*.ts'] })],
-  external: [],
-})
+  }
+  const plugins = [metab, typescript()]
+  const external = []
+
+  if (!commandLineArgs.configDebug) {
+    plugins.push(strip({ include: '**/*.(js|ts)' }))
+  }
+
+  return {
+    input,
+    output,
+    plugins,
+    external,
+  }
+}
