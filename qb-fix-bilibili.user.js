@@ -479,10 +479,14 @@
         });
     }
 
+    function trace(description, center) {
+        return center;
+    }
+
     async function 动态井号标签 () {
         launchObserver({
             parentNode: /^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)
-                ? await elementEmerge(`.room-feed-content`)
+                ? await elementEmerge(`.room-feed-content`, trace('动态井号标签: #sections-vm is', $(`#sections-vm`).parentElement))
                 : document.body,
             selector: `a.dynamic-link-hover-bg`,
             successCallback: ({ selectAll }) => {

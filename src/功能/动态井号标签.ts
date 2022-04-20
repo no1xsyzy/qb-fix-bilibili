@@ -1,10 +1,14 @@
 import { $, $$ } from '../基本/selector'
 import { elementEmerge, launchObserver } from '../基本/observer'
+import { trace } from 'src/基本/debug'
 
 export default async function () {
   launchObserver({
     parentNode: /^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)
-      ? await elementEmerge(`.room-feed-content`)
+      ? await elementEmerge(
+          `.room-feed-content`,
+          trace('动态井号标签: #sections-vm is', $(`#sections-vm`).parentElement),
+        )
       : document.body,
     selector: `a.dynamic-link-hover-bg`,
     successCallback: ({ selectAll }) => {
