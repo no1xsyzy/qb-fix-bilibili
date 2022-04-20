@@ -17,7 +17,6 @@
         childList: true,
         subtree: true,
     }, }) {
-        // if parent node does not exist, use body instead
         if (!parentNode) {
             parentNode = document;
         }

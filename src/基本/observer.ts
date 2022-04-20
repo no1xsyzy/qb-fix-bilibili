@@ -25,10 +25,13 @@ export function launchObserver<T extends HTMLElement>({
   },
 }: ObserverSpec<T>) {
   // if parent node does not exist, use body instead
+  let trigger = 0
+  let success = 0
   if (!parentNode) {
     parentNode = document
   }
   const observeFunc = () => {
+    trigger += 1
     const selected: T = parentNode.querySelector(selector)
     if (!selected) {
       if (failCallback) {
@@ -40,7 +43,8 @@ export function launchObserver<T extends HTMLElement>({
       observer.disconnect()
     }
     if (successCallback) {
-      console.debug(`launchObserver: observed ${selector}`, selected)
+      success += 1
+      console.debug(`launchObserver: observed ${selector} (efficiency=${success / trigger})`, selected)
       successCallback({
         selected,
         selectAll() {
