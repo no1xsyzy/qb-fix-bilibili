@@ -1,6 +1,6 @@
 import metablock from 'rollup-plugin-userscript-metablock'
 import typescript from '@rollup/plugin-typescript'
-import strip from 'rollup-plugin-strip'
+import strip from '@rollup/plugin-strip'
 
 const pkg = require('./package.json')
 
