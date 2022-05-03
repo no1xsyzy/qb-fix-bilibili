@@ -20,33 +20,55 @@
         if (!parentNode) {
             parentNode = document;
         }
-        const observeFunc = () => {
+        let _connected = false;
+        const off = () => {
+            if (_connected) {
+                observer.takeRecords();
+                observer.disconnect();
+                _connected = false;
+            }
+        };
+        const on = () => {
+            if (!_connected) {
+                observer.observe(parentNode, config);
+                _connected = true;
+            }
+        };
+        const connected = () => _connected;
+        const reroot = (newParentNode) => {
+            parentNode = newParentNode;
+        };
+        const wrapped = { on, off, connected, reroot };
+        const observeFunc = (mutationList) => {
             const selected = parentNode.querySelector(selector);
             if (!selected) {
                 if (failCallback) {
-                    failCallback();
+                    failCallback({ ...wrapped, mutationList });
                 }
                 return;
             }
             if (stopWhenSuccess) {
-                observer.disconnect();
+                off();
             }
             if (successCallback) {
                 successCallback({
+                    ...wrapped,
                     selected,
                     selectAll() {
                         return Array.from(parentNode.querySelectorAll(selector));
                     },
-                    disconnect() {
-                        observer.disconnect();
-                    },
+                    mutationList,
                 });
             }
         };
         const observer = new MutationObserver(observeFunc);
-        observer.observe(parentNode, config);
+        on();
+        return wrapped;
     }
     function elementEmerge(selector, parentNode) {
+        const g = (parentNode ?? document).querySelector(selector);
+        if (g)
+            return Promise.resolve(g);
         return new Promise((resolve) => {
             launchObserver({
                 parentNode,
@@ -486,11 +508,53 @@
         return center;
     }
 
-    async function 动态井号标签 () {
+    async function 动态页面$1() {
+        // match: *://t.bilibili.com/*
+        if (/\/topic\/name\/[^/]+\/feed/.exec(location.pathname)) {
+            launchObserver({
+                selector: `a.dynamic-link-hover-bg`,
+                successCallback: ({ selectAll }) => {
+                    for (const link of selectAll()) {
+                        // link: HTMLAnchorElement
+                        if (/#.+#/.exec(link.innerHTML) && /https?:\/\/search.bilibili.com\/all\?.+/.exec(link.href)) {
+                            link.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(link.innerHTML)[1]}/feed`;
+                        }
+                    }
+                },
+                failCallback: () => {
+                },
+                stopWhenSuccess: false,
+            });
+            return;
+        }
         launchObserver({
-            parentNode: /^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)
-                ? await elementEmerge(`.room-feed-content`, trace('动态井号标签: #sections-vm is', $(`#sections-vm`).parentElement))
-                : document.body,
+            parentNode: document.body,
+            selector: `span.bili-rich-text-topic`,
+            successCallback: ({ selectAll }) => {
+                for (const span of selectAll()) {
+                    // link: HTMLAnchorElement
+                    const anchor = document.createElement('A');
+                    anchor.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(span.innerHTML)[1]}/feed`;
+                    anchor.classList.add('bili-rich-text-topic');
+                    anchor.setAttribute('target', '_blank');
+                    anchor.addEventListener('click', (e) => e.stopPropagation());
+                    anchor.innerHTML = span.innerHTML;
+                    span.replaceWith(anchor);
+                }
+            },
+            failCallback: () => {
+            },
+            stopWhenSuccess: false,
+        });
+    }
+    async function 直播间$1() {
+        // match: *://live.bilibili.com/blanc/:live_id
+        // match: *://live.bilibili.com/:live_id
+        const appBody = $(`#sections-vm`).parentElement;
+        const roomFeed = await elementEmerge(`.room-feed`, appBody);
+        const parentNode = await elementEmerge(`.room-feed-content`, roomFeed);
+        launchObserver({
+            parentNode,
             selector: `a.dynamic-link-hover-bg`,
             successCallback: ({ selectAll }) => {
                 for (const link of selectAll()) {
@@ -499,6 +563,40 @@
                         link.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(link.innerHTML)[1]}/feed`;
                     }
                 }
+            },
+            failCallback: () => {
+            },
+            stopWhenSuccess: false,
+        });
+    }
+    async function 空间() {
+        // match: space.bilibili.com/:mid
+        const sSpace = await elementEmerge(`.s-space`);
+        const parentNode = await elementEmerge(`#page-dynamic`, sSpace);
+        const ob = launchObserver({
+            parentNode,
+            selector: `a.dynamic-link-hover-bg`,
+            successCallback: ({ selectAll }) => {
+                for (const link of selectAll()) {
+                    // link: HTMLAnchorElement
+                    if (/#.+#/.exec(link.innerHTML) && /https?:\/\/search.bilibili.com\/all\?.+/.exec(link.href)) {
+                        link.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(link.innerHTML)[1]}/feed`;
+                    }
+                }
+            },
+            failCallback: () => {
+            },
+            stopWhenSuccess: false,
+        });
+        launchObserver({
+            parentNode: sSpace,
+            selector: `#page-dynamic`,
+            successCallback: ({ selected }) => {
+                ob.reroot(selected);
+                ob.on();
+            },
+            failCallback: () => {
+                ob.off();
             },
             stopWhenSuccess: false,
         });
@@ -523,16 +621,12 @@
         直播间标题();
         直播间留言者显示粉丝数();
         通用表情框尺寸修复();
-        动态井号标签();
+        直播间$1();
         自动刷新崩溃直播间();
     }
 
     function 直播主页 () {
         关注栏尺寸();
-    }
-
-    function 其他页面 () {
-        动态井号标签();
     }
 
     async function 动态首页联合投稿具名 () {
@@ -571,8 +665,12 @@
     }
 
     function 动态页面 () {
-        动态井号标签();
+        动态页面$1();
         动态首页联合投稿具名();
+    }
+
+    function 主页动态 () {
+        空间();
     }
 
     if (location.host === 'live.bilibili.com') {
@@ -585,15 +683,14 @@
         else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)) {
             直播间();
         }
-        else {
-            其他页面();
-        }
+        else ;
+    }
+    else if (location.host === 'space.bilibili.com') {
+        主页动态();
     }
     else if (location.host === 't.bilibili.com') {
         动态页面();
     }
-    else {
-        其他页面();
-    }
+    else ;
 
 })();
