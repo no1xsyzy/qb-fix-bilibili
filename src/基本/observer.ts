@@ -105,7 +105,11 @@ export function launchObserver<T extends HTMLElement>({
   return wrapped
 }
 
-export function elementEmerge(selector: string, parentNode?: HTMLElement | Document): Promise<HTMLElement> {
+export function elementEmerge(
+  selector: string,
+  parentNode?: HTMLElement | Document,
+  subtree = true,
+): Promise<HTMLElement> {
   const g = (parentNode ?? document).querySelector(selector) as HTMLElement
   if (g) return Promise.resolve(g)
   return new Promise((resolve) => {
@@ -116,6 +120,7 @@ export function elementEmerge(selector: string, parentNode?: HTMLElement | Docum
         console.debug(`elementEmerge: ${selector} emerged as`, selected)
         resolve(selected)
       },
+      config: { subtree, childList: true },
     })
   })
 }

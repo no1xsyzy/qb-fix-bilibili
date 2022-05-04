@@ -65,7 +65,7 @@
         on();
         return wrapped;
     }
-    function elementEmerge(selector, parentNode) {
+    function elementEmerge(selector, parentNode, subtree = true) {
         const g = (parentNode ?? document).querySelector(selector);
         if (g)
             return Promise.resolve(g);
@@ -76,6 +76,7 @@
                 successCallback: ({ selected }) => {
                     resolve(selected);
                 },
+                config: { subtree, childList: true },
             });
         });
     }
@@ -604,16 +605,14 @@
 
     async function 自动刷新崩溃直播间 () {
         const player = $(`#live-player`);
-        const video = elementEmerge(`video`, player).then((x) => trace('自动刷新崩溃直播间 video', x));
-        const endingPanel = elementEmerge(`.web-player-ending-panel`, player).then((x) => trace('自动刷新崩溃直播间 ending_panel', x));
-        const errorPanel = elementEmerge(`.web-player-error-panel`, player).then((x) => trace('自动刷新崩溃直播间 error_panel', x));
+        const video = elementEmerge(`video`, player, false).then((x) => trace('自动刷新崩溃直播间 video', x));
+        const endingPanel = elementEmerge(`.web-player-ending-panel`, player, false).then((x) => trace('自动刷新崩溃直播间 ending_panel', x));
+        const errorPanel = elementEmerge(`.web-player-error-panel`, player, false).then((x) => trace('自动刷新崩溃直播间 error_panel', x));
         const last = await Promise.race([video, endingPanel, errorPanel]);
-        if (last.tagName === 'VIDEO') {
-            return;
-        }
-        errorPanel.then(() => {
+        if (last.tagName === 'VIDEO') ;
+        else if (last.classList.contains('web-player-error-panel')) {
             location.reload();
-        });
+        }
     }
 
     function 直播间 () {
