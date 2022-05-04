@@ -82,12 +82,12 @@ export function launchObserver<T extends HTMLElement>({
       return
     }
 
+    success += 1
     console.debug(`launchObserver/${selector}: success (efficiency=${success / trigger})`, selected)
     if (stopWhenSuccess) {
       off()
     }
     if (successCallback) {
-      success += 1
       successCallback({
         ...wrapped,
         selected,
