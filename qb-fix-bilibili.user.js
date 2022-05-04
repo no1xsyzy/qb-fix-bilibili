@@ -551,11 +551,23 @@
     async function 直播间$1() {
         // match: *://live.bilibili.com/blanc/:live_id
         // match: *://live.bilibili.com/:live_id
-        const appBody = $(`#sections-vm`).parentElement;
-        const roomFeed = await elementEmerge(`.room-feed`, appBody);
-        const parentNode = await elementEmerge(`.room-feed-content`, roomFeed);
+        const appBody = trace('动态井号标签/直播间: #sections-vm is', $(`#sections-vm`)).parentElement;
+        await new Promise((resolve) => {
+            launchObserver({
+                parentNode: appBody,
+                selector: `#sections-vm`,
+                successCallback: () => {
+                    resolve(null);
+                },
+                config: { childList: true },
+            });
+        });
+        const sectionVM = appBody.querySelector(`#sections-vm`);
+        const roomFeed = sectionVM.querySelector('.room-feed');
+        const roomFeedContent = await elementEmerge(`.room-feed-content`, roomFeed, false);
+        // console.debug(`动态井号标签/直播间: content`, roomFeedContent.querySelector(`.feed-card .content`))
         launchObserver({
-            parentNode,
+            parentNode: roomFeedContent,
             selector: `a.dynamic-link-hover-bg`,
             successCallback: ({ selectAll }) => {
                 for (const link of selectAll()) {

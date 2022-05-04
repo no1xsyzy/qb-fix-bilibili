@@ -58,15 +58,29 @@ export async function 直播间() {
   // match: *://live.bilibili.com/:live_id
   console.debug('动态井号标签/直播间 in')
 
-  const appBody = $(`#sections-vm`).parentElement
-  trace('动态井号标签/直播间: #sections-vm is', appBody)
-  const roomFeed = await elementEmerge(`.room-feed`, appBody)
-  trace('动态井号标签/直播间: .room-feed is', roomFeed)
-  const parentNode = await elementEmerge(`.room-feed-content`, roomFeed)
-  trace('动态井号标签/直播间: .room-feed-content is', parentNode)
+  const appBody = trace('动态井号标签/直播间: #sections-vm is', $(`#sections-vm`)).parentElement
+  trace('动态井号标签/直播间: appBody', appBody)
+  await new Promise((resolve) => {
+    launchObserver({
+      parentNode: appBody,
+      selector: `#sections-vm`,
+      successCallback: () => {
+        resolve(null)
+      },
+      config: { childList: true },
+    })
+  })
+  const sectionVM = appBody.querySelector(`#sections-vm`)
+  trace('动态井号标签/直播间: sectionVM is', sectionVM)
+  const roomFeed = sectionVM.querySelector('.room-feed') as HTMLElement
+  trace('动态井号标签/直播间: roomFeed', roomFeed)
+  const roomFeedContent = await elementEmerge(`.room-feed-content`, roomFeed, false)
+  trace('动态井号标签/直播间: roomFeedContent', roomFeedContent)
+
+  // console.debug(`动态井号标签/直播间: content`, roomFeedContent.querySelector(`.feed-card .content`))
 
   launchObserver({
-    parentNode,
+    parentNode: roomFeedContent,
     selector: `a.dynamic-link-hover-bg`,
     successCallback: ({ selectAll }) => {
       console.debug('动态井号标签/直播间 oscb in')
