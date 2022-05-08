@@ -81,34 +81,56 @@
         });
     }
 
+    function trace(description, center) {
+        return center;
+    }
+
+    const waitAppBodyMount = (async function () {
+        const appBody = $(`.app-body`);
+        if (!appBody) {
+            throw new Error('activity page');
+        }
+        await new Promise((resolve) => {
+            launchObserver({
+                parentNode: appBody,
+                selector: `#sections-vm`,
+                successCallback: () => {
+                    resolve(null);
+                },
+                config: { childList: true },
+            });
+        });
+        return appBody;
+    })();
+
     async function 关注栏尺寸 () {
         GM_addStyle(`.section-content-cntr{height:calc(100vh - 250px)!important;}`);
-        const selector = (() => {
+        const sidebarVM = await (async () => {
             if (location.pathname === '/') {
-                return `.flying-vm`;
+                return $(`.flying-vm`);
             }
             else if (location.pathname === '/p/eden/area-tags') {
-                return `#area-tags`;
+                return $(`#area-tags`);
             }
             else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)) {
-                return `#sidebar-vm`;
+                const appBody = await waitAppBodyMount;
+                return appBody.querySelector(`#sidebar-vm`);
             }
         })();
+        const sidebarPopup = await elementEmerge(`.side-bar-popup-cntr.ts-dot-4`, sidebarVM);
         launchObserver({
-            parentNode: await elementEmerge(selector),
-            selector: `.side-bar-popup-cntr.ts-dot-4`,
-            successCallback: ({ selected }) => {
-                if (selected.style.height !== '0px') {
-                    selected.style.bottom = '75px';
-                    selected.style.height = 'calc(100vh - 150px)';
+            parentNode: sidebarPopup,
+            selector: `*`,
+            successCallback: ({ mutationList }) => {
+                if (sidebarPopup.style.height !== '0px') {
+                    sidebarPopup.style.bottom = '75px';
+                    sidebarPopup.style.height = 'calc(100vh - 150px)';
                     // selected.style.height = "600px"
                 }
                 setTimeout(() => $(`.side-bar-popup-cntr.ts-dot-4 .ps`)?.dispatchEvent(new Event('scroll')), 1000);
             },
             stopWhenSuccess: false,
             config: {
-                childList: true,
-                subtree: true,
                 attributes: true,
             },
         });
@@ -505,10 +527,6 @@
         });
     }
 
-    function trace(description, center) {
-        return center;
-    }
-
     async function 动态页面$1() {
         // match: *://t.bilibili.com/*
         if (/\/topic\/name\/[^/]+\/feed/.exec(location.pathname)) {
@@ -551,17 +569,7 @@
     async function 直播间$1() {
         // match: *://live.bilibili.com/blanc/:live_id
         // match: *://live.bilibili.com/:live_id
-        const appBody = trace('动态井号标签/直播间: #sections-vm is', $(`#sections-vm`)).parentElement;
-        await new Promise((resolve) => {
-            launchObserver({
-                parentNode: appBody,
-                selector: `#sections-vm`,
-                successCallback: () => {
-                    resolve(null);
-                },
-                config: { childList: true },
-            });
-        });
+        const appBody = await waitAppBodyMount;
         const sectionVM = appBody.querySelector(`#sections-vm`);
         const roomFeed = sectionVM.querySelector('.room-feed');
         const roomFeedContent = await elementEmerge(`.room-feed-content`, roomFeed, false);
@@ -691,7 +699,7 @@
         else if (location.pathname === '/p/eden/area-tags') {
             分区();
         }
-        else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)) {
+        else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname) && $(`.app-body`)) {
             直播间();
         }
         else ;

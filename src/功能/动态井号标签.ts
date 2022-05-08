@@ -1,6 +1,6 @@
-import { $ } from '../基本/selector'
 import { elementEmerge, launchObserver } from '../基本/observer'
 import { trace } from 'src/基本/debug'
+import { waitAppBodyMount } from 'src/基本/waitAppBody'
 
 export async function 动态页面() {
   // match: *://t.bilibili.com/*
@@ -58,18 +58,8 @@ export async function 直播间() {
   // match: *://live.bilibili.com/:live_id
   console.debug('动态井号标签/直播间 in')
 
-  const appBody = trace('动态井号标签/直播间: #sections-vm is', $(`#sections-vm`)).parentElement
-  trace('动态井号标签/直播间: appBody', appBody)
-  await new Promise((resolve) => {
-    launchObserver({
-      parentNode: appBody,
-      selector: `#sections-vm`,
-      successCallback: () => {
-        resolve(null)
-      },
-      config: { childList: true },
-    })
-  })
+  const appBody = await waitAppBodyMount
+
   const sectionVM = appBody.querySelector(`#sections-vm`)
   trace('动态井号标签/直播间: sectionVM is', sectionVM)
   const roomFeed = sectionVM.querySelector('.room-feed') as HTMLElement

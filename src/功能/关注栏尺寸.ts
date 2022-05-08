@@ -1,27 +1,36 @@
 import { $ } from '../基本/selector'
 import { elementEmerge, launchObserver } from '../基本/observer'
+import { trace } from '../基本/debug'
+import { waitAppBodyMount } from '../基本/waitAppBody'
 
 export default async function () {
   GM_addStyle(`.section-content-cntr{height:calc(100vh - 250px)!important;}`)
 
-  const selector = (() => {
+  const sidebarVM = await (async () => {
     if (location.pathname === '/') {
-      return `.flying-vm`
+      return $(`.flying-vm`)
     } else if (location.pathname === '/p/eden/area-tags') {
-      return `#area-tags`
+      return $(`#area-tags`)
     } else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)) {
-      return `#sidebar-vm`
+      const appBody = await waitAppBodyMount
+      return appBody.querySelector(`#sidebar-vm`) as HTMLElement
     }
   })()
 
+  trace('关注栏尺寸 sidebarVM', sidebarVM)
+
+  const sidebarPopup = await elementEmerge(`.side-bar-popup-cntr.ts-dot-4`, sidebarVM)
+
+  trace('关注栏尺寸 sidebarPopup', sidebarPopup)
+
   launchObserver({
-    parentNode: await elementEmerge(selector),
-    selector: `.side-bar-popup-cntr.ts-dot-4`,
-    successCallback: ({ selected }) => {
-      console.debug('关注栏尺寸 osbc in')
-      if (selected.style.height !== '0px') {
-        selected.style.bottom = '75px'
-        selected.style.height = 'calc(100vh - 150px)'
+    parentNode: sidebarPopup,
+    selector: `*`,
+    successCallback: ({ mutationList }) => {
+      console.debug('关注栏尺寸 osbc in', mutationList)
+      if (sidebarPopup.style.height !== '0px') {
+        sidebarPopup.style.bottom = '75px'
+        sidebarPopup.style.height = 'calc(100vh - 150px)'
         // selected.style.height = "600px"
       }
       setTimeout(() => $(`.side-bar-popup-cntr.ts-dot-4 .ps`)?.dispatchEvent(new Event('scroll')), 1000)
@@ -29,8 +38,6 @@ export default async function () {
     },
     stopWhenSuccess: false,
     config: {
-      childList: true,
-      subtree: true,
       attributes: true,
     },
   })
