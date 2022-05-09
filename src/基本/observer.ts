@@ -24,6 +24,40 @@ interface ObserverSpec<T extends HTMLElement> {
   config?: MutationObserverInit
 }
 
+function betterSelector<T extends HTMLElement>(
+  parentNode: HTMLElement | Document,
+  selector: string,
+): { select(): T; selectAll(): T[] } {
+  const className = /^\.([\w_-]+)$/.exec(selector)
+  if (className) {
+    return {
+      select: () => parentNode.getElementsByClassName(className[1])[0] as T,
+      selectAll: () => Array.from(parentNode.getElementsByClassName(className[1])) as T[],
+    }
+  }
+
+  const elementID = /^#([\w_-]+)$/.exec(selector)
+  if (elementID) {
+    return {
+      select: () => document.getElementById(className[1])[0],
+      selectAll: () => [document.getElementById(className[1]) as T],
+    }
+  }
+
+  const tagName = /^([\w_-]+)$/.exec(selector)
+  if (tagName) {
+    return {
+      select: () => parentNode.getElementsByTagName(className[1])[0] as T,
+      selectAll: () => Array.from(parentNode.getElementsByTagName(className[1])) as T[],
+    }
+  }
+
+  return {
+    select: () => parentNode.querySelector(selector),
+    selectAll: () => Array.from(parentNode.querySelectorAll(selector)),
+  }
+}
+
 export function launchObserver<T extends HTMLElement>({
   parentNode,
   selector,
@@ -42,6 +76,8 @@ export function launchObserver<T extends HTMLElement>({
   if (!parentNode) {
     parentNode = document
   }
+
+  const { select, selectAll } = betterSelector<T>(parentNode, selector)
 
   let _connected = false
 
@@ -81,7 +117,7 @@ export function launchObserver<T extends HTMLElement>({
       }
     })(new Date())
     trigger += 1
-    const selected: T = parentNode.querySelector(selector)
+    const selected: T = select()
     if (!selected) {
       console.debug(`launchObserver/${selector}: fail (efficiency=${success / trigger})`)
       if (failCallback) {
@@ -100,9 +136,7 @@ export function launchObserver<T extends HTMLElement>({
       const maybePromise = successCallback({
         ...wrapped,
         selected,
-        selectAll() {
-          return Array.from(parentNode.querySelectorAll(selector))
-        },
+        selectAll,
         mutationList,
       })
 
@@ -127,7 +161,7 @@ export function elementEmerge(
   parentNode?: HTMLElement | Document,
   subtree = true,
 ): Promise<HTMLElement> {
-  const g = (parentNode ?? document).querySelector(selector) as HTMLElement
+  const g = betterSelector(parentNode ?? document, selector).select()
   if (g) return Promise.resolve(g)
   return new Promise((resolve) => {
     launchObserver({

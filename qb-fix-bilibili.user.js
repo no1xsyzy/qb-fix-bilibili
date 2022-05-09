@@ -13,6 +13,33 @@
 
     const $ = (x) => document.querySelector(x);
 
+    function betterSelector(parentNode, selector) {
+        const className = /^\.([\w_-]+)$/.exec(selector);
+        if (className) {
+            return {
+                select: () => parentNode.getElementsByClassName(className[1])[0],
+                selectAll: () => Array.from(parentNode.getElementsByClassName(className[1])),
+            };
+        }
+        const elementID = /^#([\w_-]+)$/.exec(selector);
+        if (elementID) {
+            return {
+                select: () => document.getElementById(className[1])[0],
+                selectAll: () => [document.getElementById(className[1])],
+            };
+        }
+        const tagName = /^([\w_-]+)$/.exec(selector);
+        if (tagName) {
+            return {
+                select: () => parentNode.getElementsByTagName(className[1])[0],
+                selectAll: () => Array.from(parentNode.getElementsByTagName(className[1])),
+            };
+        }
+        return {
+            select: () => parentNode.querySelector(selector),
+            selectAll: () => Array.from(parentNode.querySelectorAll(selector)),
+        };
+    }
     function launchObserver({ parentNode, selector, failCallback = null, successCallback = null, stopWhenSuccess = true, config = {
         childList: true,
         subtree: true,
@@ -20,6 +47,7 @@
         if (!parentNode) {
             parentNode = document;
         }
+        const { select, selectAll } = betterSelector(parentNode, selector);
         let _connected = false;
         const off = () => {
             if (_connected) {
@@ -40,7 +68,7 @@
         };
         const wrapped = { on, off, connected, reroot };
         const observeFunc = (mutationList) => {
-            const selected = parentNode.querySelector(selector);
+            const selected = select();
             if (!selected) {
                 if (failCallback) {
                     failCallback({ ...wrapped, mutationList });
@@ -54,9 +82,7 @@
                 const maybePromise = successCallback({
                     ...wrapped,
                     selected,
-                    selectAll() {
-                        return Array.from(parentNode.querySelectorAll(selector));
-                    },
+                    selectAll,
                     mutationList,
                 });
                 if (maybePromise instanceof Promise) {
@@ -70,7 +96,7 @@
         return wrapped;
     }
     function elementEmerge(selector, parentNode, subtree = true) {
-        const g = (parentNode ?? document).querySelector(selector);
+        const g = betterSelector(parentNode ?? document, selector).select();
         if (g)
             return Promise.resolve(g);
         return new Promise((resolve) => {
