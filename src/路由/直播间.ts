@@ -6,10 +6,12 @@ import * as 动态井号标签 from 'src/功能/动态井号标签'
 import 自动刷新崩溃直播间 from 'src/功能/自动刷新崩溃直播间'
 
 export default function () {
+  console.debug('路由/直播间 in')
   关注栏尺寸()
   直播间标题()
   直播间留言者显示粉丝数()
   通用表情框尺寸修复()
   动态井号标签.直播间()
   自动刷新崩溃直播间()
+  console.debug('路由/直播间 out')
 }

@@ -11,35 +11,45 @@
 (function () {
     'use strict';
 
-    const $ = (x) => document.querySelector(x);
+    function trace(description, center) {
+        return center;
+    }
 
+    const $ = (x) => document.querySelector(x);
     function betterSelector(parentNode, selector) {
+        // `.class-name`
         const className = /^\.([\w_-]+)$/.exec(selector);
         if (className) {
             return {
-                select: () => parentNode.getElementsByClassName(className[1])[0],
-                selectAll: () => Array.from(parentNode.getElementsByClassName(className[1])),
+                select: () => trace(`betterSelector("${selector}").select#class`, parentNode.getElementsByClassName(className[1])[0]),
+                selectAll: () => trace(`betterSelector("${selector}").selectAll#class`, Array.from(parentNode.getElementsByClassName(className[1]))),
             };
         }
+        // `#id`
         const elementID = /^#([\w_-]+)$/.exec(selector);
         if (elementID) {
             return {
-                select: () => document.getElementById(className[1])[0],
-                selectAll: () => [document.getElementById(className[1])],
+                select: () => trace(`betterSelector("${selector}").select#id=${elementID[1]}`, document.getElementById(elementID[1])),
+                selectAll: () => trace(`betterSelector("${selector}").selectAll#id=${elementID[1]}`, [
+                    document.getElementById(elementID[1]),
+                ]),
             };
         }
+        // `tag-name`
         const tagName = /^([\w_-]+)$/.exec(selector);
         if (tagName) {
             return {
-                select: () => parentNode.getElementsByTagName(className[1])[0],
-                selectAll: () => Array.from(parentNode.getElementsByTagName(className[1])),
+                select: () => trace(`betterSelector("${selector}").select#tag`, parentNode.getElementsByTagName(tagName[1])[0]),
+                selectAll: () => trace(`betterSelector("${selector}").selectAll#tag`, Array.from(parentNode.getElementsByTagName(tagName[1]))),
             };
         }
+        // otherwise
         return {
-            select: () => parentNode.querySelector(selector),
-            selectAll: () => Array.from(parentNode.querySelectorAll(selector)),
+            select: () => trace(`betterSelector("${selector}").select#qs`, parentNode.querySelector(selector)),
+            selectAll: () => trace(`betterSelector("${selector}").selectAll#qs`, Array.from(parentNode.querySelectorAll(selector))),
         };
     }
+
     function launchObserver({ parentNode, selector, failCallback = null, successCallback = null, stopWhenSuccess = true, config = {
         childList: true,
         subtree: true,
@@ -95,6 +105,52 @@
         on();
         return wrapped;
     }
+    function attrChange({ node, attributeFilter, callback, once = true, }) {
+        let _connected = false;
+        let _resolve;
+        const promise = new Promise((resolve) => {
+            _resolve = resolve;
+        });
+        const wrapped = {
+            on() {
+                if (_connected)
+                    return;
+                _connected = true;
+                observer.observe(node, { attributeFilter, attributeOldValue: true });
+            },
+            off() {
+                if (!_connected)
+                    return;
+                _connected = false;
+                observer.disconnect();
+            },
+            connected() {
+                return _connected;
+            },
+            reroot(x) {
+                if (_connected) {
+                    wrapped.off();
+                    node = x;
+                    wrapped.on();
+                }
+                else {
+                    node = x;
+                }
+            },
+            then(onfulfill, onrejected) {
+                return promise.then(onfulfill, onrejected);
+            },
+        };
+        const observer = new MutationObserver((mutationList) => {
+            if (once) {
+                wrapped.off();
+            }
+            callback(mutationList, wrapped);
+            _resolve(mutationList[0].attributeName);
+        });
+        wrapped.on();
+        return wrapped;
+    }
     function elementEmerge(selector, parentNode, subtree = true) {
         const g = betterSelector(parentNode ?? document, selector).select();
         if (g)
@@ -111,10 +167,6 @@
         });
     }
 
-    function trace(description, center) {
-        return center;
-    }
-
     const waitAppBodyMount = (async function () {
         const appBody = $(`.app-body`);
         if (!appBody) {
@@ -124,8 +176,10 @@
             launchObserver({
                 parentNode: appBody,
                 selector: `#sections-vm`,
-                successCallback: () => {
+                successCallback: ({ selected }) => {
                     resolve(null);
+                },
+                failCallback: ({ mutationList }) => {
                 },
                 config: { childList: true },
             });
@@ -147,7 +201,14 @@
                 return appBody.querySelector(`#sidebar-vm`);
             }
         })();
-        const sidebarPopup = await elementEmerge(`.side-bar-popup-cntr.ts-dot-4`, sidebarVM);
+        const sidebarPopup = await elementEmerge(`.side-bar-popup-cntr`, sidebarVM);
+        attrChange({
+            node: sidebarPopup,
+            attributeFilter: ['class'],
+            callback: () => {
+            },
+            once: false,
+        });
         launchObserver({
             parentNode: sidebarPopup,
             selector: `*`,
@@ -439,7 +500,7 @@
     }
 
     const parentNode$1 = $(`#area-tag-list`);
-    const selector$2 = `a.Item_1EohdhbR`;
+    const selector$2 = `.Item_1EohdhbR`;
     GM_addStyle(`
 .processed::after {
   content: attr(data-followers);
@@ -558,56 +619,10 @@
         });
     }
 
-    async function 动态页面$1() {
-        // match: *://t.bilibili.com/*
-        if (/\/topic\/name\/[^/]+\/feed/.exec(location.pathname)) {
-            launchObserver({
-                selector: `a.dynamic-link-hover-bg`,
-                successCallback: ({ selectAll }) => {
-                    for (const link of selectAll()) {
-                        // link: HTMLAnchorElement
-                        if (/#.+#/.exec(link.innerHTML) && /https?:\/\/search.bilibili.com\/all\?.+/.exec(link.href)) {
-                            link.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(link.innerHTML)[1]}/feed`;
-                        }
-                    }
-                },
-                failCallback: () => {
-                },
-                stopWhenSuccess: false,
-            });
-            return;
-        }
+    async function 标签动态流$1() {
+        // match: *://t.bilibili.com/topic/name/:strTopic/feed
         launchObserver({
-            parentNode: document.body,
-            selector: `span.bili-rich-text-topic`,
-            successCallback: ({ selectAll }) => {
-                for (const span of selectAll()) {
-                    // link: HTMLAnchorElement
-                    const anchor = document.createElement('A');
-                    anchor.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(span.innerHTML)[1]}/feed`;
-                    anchor.classList.add('bili-rich-text-topic');
-                    anchor.setAttribute('target', '_blank');
-                    anchor.addEventListener('click', (e) => e.stopPropagation());
-                    anchor.innerHTML = span.innerHTML;
-                    span.replaceWith(anchor);
-                }
-            },
-            failCallback: () => {
-            },
-            stopWhenSuccess: false,
-        });
-    }
-    async function 直播间$1() {
-        // match: *://live.bilibili.com/blanc/:live_id
-        // match: *://live.bilibili.com/:live_id
-        const appBody = await waitAppBodyMount;
-        const sectionVM = appBody.querySelector(`#sections-vm`);
-        const roomFeed = sectionVM.querySelector('.room-feed');
-        const roomFeedContent = await elementEmerge(`.room-feed-content`, roomFeed, false);
-        // console.debug(`动态井号标签/直播间: content`, roomFeedContent.querySelector(`.feed-card .content`))
-        launchObserver({
-            parentNode: roomFeedContent,
-            selector: `a.dynamic-link-hover-bg`,
+            selector: `.dynamic-link-hover-bg`,
             successCallback: ({ selectAll }) => {
                 for (const link of selectAll()) {
                     // link: HTMLAnchorElement
@@ -621,13 +636,60 @@
             stopWhenSuccess: false,
         });
     }
-    async function 空间() {
+    async function 动态页面$1() {
+        // match: *://t.bilibili.com/*
+        launchObserver({
+            parentNode: document.body,
+            selector: `.bili-rich-text-topic`,
+            successCallback: ({ selectAll }) => {
+                for (const span of selectAll()) {
+                    if (span.classList.contains('processed'))
+                        continue;
+                    const anchor = document.createElement('A');
+                    anchor.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(span.innerHTML)[1]}/feed`;
+                    anchor.classList.add('bili-rich-text-topic');
+                    anchor.classList.add('processed');
+                    anchor.setAttribute('target', '_blank');
+                    anchor.addEventListener('click', (e) => e.stopPropagation());
+                    anchor.innerHTML = span.innerHTML;
+                    span.replaceWith(anchor);
+                }
+            },
+            failCallback: () => {
+            },
+            stopWhenSuccess: false,
+        });
+    }
+    async function 直播间$1() {
+        // match: *://live.bilibili.com/blanc/:idLive
+        // match: *://live.bilibili.com/:idLive
+        const appBody = await waitAppBodyMount;
+        const sectionVM = appBody.querySelector(`#sections-vm`);
+        const roomFeed = sectionVM.querySelector('.room-feed');
+        const roomFeedContent = await elementEmerge(`.room-feed-content`, roomFeed, false);
+        launchObserver({
+            parentNode: roomFeedContent,
+            selector: `.dynamic-link-hover-bg`,
+            successCallback: ({ selectAll }) => {
+                for (const link of selectAll()) {
+                    // link: HTMLAnchorElement
+                    if (/#.+#/.exec(link.innerHTML) && /https?:\/\/search.bilibili.com\/all\?.+/.exec(link.href)) {
+                        link.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(link.innerHTML)[1]}/feed`;
+                    }
+                }
+            },
+            failCallback: () => {
+            },
+            stopWhenSuccess: false,
+        });
+    }
+    async function 空间$1() {
         // match: space.bilibili.com/:mid
         const sSpace = await elementEmerge(`.s-space`);
         const parentNode = await elementEmerge(`#page-dynamic`, sSpace);
         const ob = launchObserver({
             parentNode,
-            selector: `a.dynamic-link-hover-bg`,
+            selector: `.dynamic-link-hover-bg`,
             successCallback: ({ selectAll }) => {
                 for (const link of selectAll()) {
                     // link: HTMLAnchorElement
@@ -679,11 +741,110 @@
         关注栏尺寸();
     }
 
+    async function 分离视频类型 () {
+        GM_addStyle(`
+  .qfb__subselect_list {display: none;}
+
+  .bili-dyn-list-tabs__item.active:nth-child(2) ~ .qfb__subselect_list {
+    display: flex;
+  }
+
+  #qfb_upload, #qfb_live_replay {
+    display: none;
+  }
+
+  #qfb_upload:not(:checked) ~ .bili-dyn-list-tabs .qfb_upload::before {content:"☐"}
+  #qfb_upload:checked ~ .bili-dyn-list-tabs .qfb_upload::before {content:"☑"}
+  #qfb_upload:not(:checked) ~ .bili-dyn-list .qfb_upload {
+    display: none;
+  }
+
+  #qfb_live_replay:not(:checked) ~ .bili-dyn-list-tabs .qfb_live_replay::before {content:"☐"}
+  #qfb_live_replay:checked ~ .bili-dyn-list-tabs .qfb_live_replay::before {content:"☑"}
+  #qfb_live_replay:not(:checked) ~ .bili-dyn-list .qfb_live_replay {
+    display: none;
+  }
+  `);
+        const listTabs = await elementEmerge(`.bili-dyn-list-tabs`);
+        const cmbUpload = document.createElement('input');
+        cmbUpload.setAttribute('type', 'checkbox');
+        cmbUpload.setAttribute('id', 'qfb_upload');
+        cmbUpload.checked = true;
+        listTabs.before(cmbUpload);
+        const cmbLiveReplay = document.createElement('input');
+        cmbLiveReplay.setAttribute('type', 'checkbox');
+        cmbLiveReplay.setAttribute('id', 'qfb_live_replay');
+        cmbLiveReplay.checked = true;
+        listTabs.before(cmbLiveReplay);
+        const listTabsUpload = await elementEmerge(`.bili-dyn-list-tabs__item:nth-child(2)`, listTabs);
+        const subSelect = document.createElement('div');
+        subSelect.classList.add('bili-dyn-list-tabs');
+        subSelect.classList.add('qfb__subselect_list');
+        subSelect.innerHTML = `
+  <div class="bili-dyn-list-tabs__list">
+    <label class="bili-dyn-list-tabs__item qfb_upload" for="qfb_upload">
+      投稿视频
+    </label>
+    <label class="bili-dyn-list-tabs__item qfb_live_replay" for="qfb_live_replay">
+      直播回放
+    </label>
+  </div>
+  `;
+        listTabs.after(subSelect);
+        attrChange({
+            node: listTabsUpload,
+            attributeFilter: ['class'],
+            callback: () => {
+                if (listTabsUpload.classList.contains('active')) {
+                    subSelect.style.display = 'flex';
+                }
+                else {
+                    subSelect.style.display = 'none';
+                }
+            },
+            once: false,
+        });
+        listTabs.addEventListener('click', (e) => {
+            listTabsUpload.classList.contains('');
+            if (e.target === listTabsUpload) {
+                subSelect.style.display = 'flex';
+            }
+            else {
+                subSelect.style.display = 'none';
+            }
+        });
+        const dynList = await elementEmerge(`.bili-dyn-list__items`);
+        launchObserver({
+            parentNode: dynList,
+            selector: `.bili-dyn-list__item`,
+            successCallback: ({ selectAll }) => {
+                for (const div of selectAll()) {
+                    if (div.classList.contains('processed'))
+                        continue;
+                    const type = div.getElementsByClassName(`bili-dyn-card-video__badge`)[0]?.textContent.trim();
+                    switch (type) {
+                        case '直播回放':
+                            div.classList.add('qfb_live_replay');
+                            break;
+                        case '合作视频':
+                        case '投稿视频':
+                            div.classList.add('qfb_upload');
+                            break;
+                    }
+                    div.classList.add('processed');
+                }
+            },
+            config: {
+                childList: true,
+            },
+        });
+    }
+
     async function 动态首页联合投稿具名 () {
         const record = recordDynamicFeed({ type: 'video' });
         launchObserver({
             parentNode: document.body,
-            selector: `div.bili-dyn-item`,
+            selector: `.bili-dyn-item`,
             successCallback: async ({ selectAll }) => {
                 for (const dynItem of selectAll()) {
                     if (dynItem.dataset.qfb_expanded_did === 'processing') {
@@ -717,10 +878,15 @@
     function 动态页面 () {
         动态页面$1();
         动态首页联合投稿具名();
+        分离视频类型();
     }
 
-    function 主页动态 () {
-        空间();
+    function 空间 () {
+        空间$1();
+    }
+
+    function 标签动态流 () {
+        标签动态流$1();
     }
 
     if (location.host === 'live.bilibili.com') {
@@ -736,10 +902,15 @@
         else ;
     }
     else if (location.host === 'space.bilibili.com') {
-        主页动态();
+        空间();
     }
     else if (location.host === 't.bilibili.com') {
-        动态页面();
+        if (/\/topic\/name\/[^/]+\/feed/.exec(location.pathname)) {
+            标签动态流();
+        }
+        else {
+            动态页面();
+        }
     }
     else ;
 

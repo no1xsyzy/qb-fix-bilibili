@@ -4,7 +4,7 @@ import { followersTextClass } from '../基本/followersTextClass'
 import { getRoomFollowers } from '../基本/bapi'
 
 const parentNode = $(`#area-tag-list`)
-const selector = `a.Item_1EohdhbR`
+const selector = `.Item_1EohdhbR`
 
 GM_addStyle(`
 .processed::after {

@@ -6,7 +6,10 @@ export function getAppBody() {
 }
 
 export const waitAppBodyMount = (async function () {
+  console.debug('waitAppBodyMount in')
+
   const appBody = $(`.app-body`)
+  console.debug('waitAppBodyMount appBody', appBody)
 
   if (!appBody) {
     throw new Error('activity page')
@@ -16,12 +19,18 @@ export const waitAppBodyMount = (async function () {
     launchObserver({
       parentNode: appBody,
       selector: `#sections-vm`,
-      successCallback: () => {
+      successCallback: ({ selected }) => {
+        console.debug('waitAppBodyMount selected', selected)
         resolve(null)
+      },
+      failCallback: ({ mutationList }) => {
+        console.debug('waitAppBodyMount fail', mutationList)
       },
       config: { childList: true },
     })
   })
+
+  console.debug('waitAppBodyMount resolved')
 
   return appBody
 })()

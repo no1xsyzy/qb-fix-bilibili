@@ -1,3 +1,5 @@
+import { betterSelector } from './selector'
+
 interface ObserverWrapped {
   on(): void
   off(): void
@@ -22,40 +24,6 @@ interface ObserverSpec<T extends HTMLElement> {
   successCallback?: (x: ObserverSuccessContext<T>) => void | Promise<void>
   stopWhenSuccess?: boolean
   config?: MutationObserverInit
-}
-
-function betterSelector<T extends HTMLElement>(
-  parentNode: HTMLElement | Document,
-  selector: string,
-): { select(): T; selectAll(): T[] } {
-  const className = /^\.([\w_-]+)$/.exec(selector)
-  if (className) {
-    return {
-      select: () => parentNode.getElementsByClassName(className[1])[0] as T,
-      selectAll: () => Array.from(parentNode.getElementsByClassName(className[1])) as T[],
-    }
-  }
-
-  const elementID = /^#([\w_-]+)$/.exec(selector)
-  if (elementID) {
-    return {
-      select: () => document.getElementById(className[1])[0],
-      selectAll: () => [document.getElementById(className[1]) as T],
-    }
-  }
-
-  const tagName = /^([\w_-]+)$/.exec(selector)
-  if (tagName) {
-    return {
-      select: () => parentNode.getElementsByTagName(className[1])[0] as T,
-      selectAll: () => Array.from(parentNode.getElementsByTagName(className[1])) as T[],
-    }
-  }
-
-  return {
-    select: () => parentNode.querySelector(selector),
-    selectAll: () => Array.from(parentNode.querySelectorAll(selector)),
-  }
 }
 
 export function launchObserver<T extends HTMLElement>({
@@ -152,6 +120,79 @@ export function launchObserver<T extends HTMLElement>({
 
   const observer = new MutationObserver(observeFunc)
   on()
+
+  return wrapped
+}
+
+interface AttributeObserverWrapped<T extends HTMLElement> extends PromiseLike<string> {
+  on(): void
+  off(): void
+  connected?(): boolean
+  reroot(x: T): void
+}
+
+interface AttributeObserverSpec<T extends HTMLElement> {
+  node: T
+  attributeFilter: string[]
+  callback(mutationList: MutationRecord[], wrapped: AttributeObserverWrapped<T>): void
+  once?: boolean
+}
+
+export function attrChange<T extends HTMLElement>({
+  node,
+  attributeFilter,
+  callback,
+  once = true,
+}: AttributeObserverSpec<T>): AttributeObserverWrapped<T> {
+  let _connected = false
+
+  let _resolve: (value: string | PromiseLike<string>) => void
+
+  const promise = new Promise<string>((resolve) => {
+    _resolve = resolve
+  })
+
+  const wrapped: AttributeObserverWrapped<T> = {
+    on() {
+      if (_connected) return
+      _connected = true
+      observer.observe(node, { attributeFilter, attributeOldValue: true })
+    },
+
+    off() {
+      if (!_connected) return
+      _connected = false
+      observer.disconnect()
+    },
+
+    connected() {
+      return _connected
+    },
+
+    reroot(x) {
+      if (_connected) {
+        wrapped.off()
+        node = x
+        wrapped.on()
+      } else {
+        node = x
+      }
+    },
+
+    then(onfulfill, onrejected) {
+      return promise.then(onfulfill, onrejected)
+    },
+  }
+
+  const observer = new MutationObserver((mutationList) => {
+    if (once) {
+      wrapped.off()
+    }
+    callback(mutationList, wrapped)
+    _resolve(mutationList[0].attributeName)
+  })
+
+  wrapped.on()
 
   return wrapped
 }

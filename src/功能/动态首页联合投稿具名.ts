@@ -5,7 +5,7 @@ export default async function () {
   const record = recordDynamicFeed({ type: 'video' })
   launchObserver({
     parentNode: document.body,
-    selector: `div.bili-dyn-item`,
+    selector: `.bili-dyn-item`,
     successCallback: async ({ selectAll }) => {
       console.debug('动态首页联合投稿具名 oscb in')
       for (const dynItem of selectAll() as HTMLDivElement[]) {

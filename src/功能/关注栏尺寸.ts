@@ -1,12 +1,17 @@
 import { $ } from '../基本/selector'
-import { elementEmerge, launchObserver } from '../基本/observer'
+import { attrChange, elementEmerge, launchObserver } from '../基本/observer'
 import { trace } from '../基本/debug'
 import { waitAppBodyMount } from '../基本/waitAppBody'
 
 export default async function () {
+  console.debug('关注栏尺寸 in')
+
   GM_addStyle(`.section-content-cntr{height:calc(100vh - 250px)!important;}`)
 
+  console.debug('关注栏尺寸 css')
+
   const sidebarVM = await (async () => {
+    console.debug('关注栏尺寸/sidebarVM location.pathname', location.pathname)
     if (location.pathname === '/') {
       return $(`.flying-vm`)
     } else if (location.pathname === '/p/eden/area-tags') {
@@ -19,9 +24,19 @@ export default async function () {
 
   trace('关注栏尺寸 sidebarVM', sidebarVM)
 
-  const sidebarPopup = await elementEmerge(`.side-bar-popup-cntr.ts-dot-4`, sidebarVM)
+  const sidebarPopup = await elementEmerge(`.side-bar-popup-cntr`, sidebarVM)
 
   trace('关注栏尺寸 sidebarPopup', sidebarPopup)
+
+  attrChange({
+    node: sidebarPopup,
+    attributeFilter: ['class'],
+    callback: () => {
+      console.debug('关注栏尺寸 osbc in')
+      console.debug('关注栏尺寸 osbc out')
+    },
+    once: false,
+  })
 
   launchObserver({
     parentNode: sidebarPopup,
@@ -42,4 +57,6 @@ export default async function () {
       attributeFilter: ['class'],
     },
   })
+
+  console.debug('关注栏尺寸 out')
 }
