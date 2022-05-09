@@ -39,6 +39,7 @@ export default async function () {
     stopWhenSuccess: false,
     config: {
       attributes: true,
+      attributeFilter: ['class'],
     },
   })
 }

@@ -132,6 +132,7 @@
             stopWhenSuccess: false,
             config: {
                 attributes: true,
+                attributeFilter: ['class'],
             },
         });
     }
