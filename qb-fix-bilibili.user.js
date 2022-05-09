@@ -51,7 +51,7 @@
                 off();
             }
             if (successCallback) {
-                successCallback({
+                const maybePromise = successCallback({
                     ...wrapped,
                     selected,
                     selectAll() {
@@ -59,6 +59,10 @@
                     },
                     mutationList,
                 });
+                if (maybePromise instanceof Promise) {
+                    maybePromise.then(() => {
+                    });
+                }
             }
         };
         const observer = new MutationObserver(observeFunc);

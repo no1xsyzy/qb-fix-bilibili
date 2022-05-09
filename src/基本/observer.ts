@@ -19,7 +19,7 @@ interface ObserverSpec<T extends HTMLElement> {
   parentNode?: HTMLElement | Document
   selector: string
   failCallback?: (x: ObserverFailureContext) => void
-  successCallback?: (x: ObserverSuccessContext<T>) => void
+  successCallback?: (x: ObserverSuccessContext<T>) => void | Promise<void>
   stopWhenSuccess?: boolean
   config?: MutationObserverInit
 }
@@ -72,6 +72,14 @@ export function launchObserver<T extends HTMLElement>({
   const wrapped: ObserverWrapped = { on, off, connected, reroot }
 
   const observeFunc: MutationCallback = (mutationList) => {
+    const displayTimeElapsed = ((start) => () => {
+      const elapsed = +new Date() - +start
+      if (elapsed > 50) {
+        console.warn(`launchObserver/${selector}: process time ${elapsed}`)
+      } else {
+        console.debug(`launchObserver/${selector}: process time ${elapsed}`)
+      }
+    })(new Date())
     trigger += 1
     const selected: T = parentNode.querySelector(selector)
     if (!selected) {
@@ -79,6 +87,7 @@ export function launchObserver<T extends HTMLElement>({
       if (failCallback) {
         failCallback({ ...wrapped, mutationList })
       }
+      displayTimeElapsed()
       return
     }
 
@@ -88,7 +97,7 @@ export function launchObserver<T extends HTMLElement>({
       off()
     }
     if (successCallback) {
-      successCallback({
+      const maybePromise = successCallback({
         ...wrapped,
         selected,
         selectAll() {
@@ -96,6 +105,14 @@ export function launchObserver<T extends HTMLElement>({
         },
         mutationList,
       })
+
+      if (maybePromise instanceof Promise) {
+        maybePromise.then(() => {
+          displayTimeElapsed()
+        })
+      } else {
+        displayTimeElapsed()
+      }
     }
   }
 
