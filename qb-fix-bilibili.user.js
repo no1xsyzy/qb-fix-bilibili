@@ -179,8 +179,6 @@
                 successCallback: ({ selected }) => {
                     resolve(null);
                 },
-                failCallback: ({ mutationList }) => {
-                },
                 config: { childList: true },
             });
         });

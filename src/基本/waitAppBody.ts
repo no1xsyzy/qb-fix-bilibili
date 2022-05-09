@@ -23,9 +23,6 @@ export const waitAppBodyMount = (async function () {
         console.debug('waitAppBodyMount selected', selected)
         resolve(null)
       },
-      failCallback: ({ mutationList }) => {
-        console.debug('waitAppBodyMount fail', mutationList)
-      },
       config: { childList: true },
     })
   })
