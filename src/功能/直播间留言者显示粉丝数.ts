@@ -19,8 +19,8 @@ GM_addStyle(`.infoline::before{
 `)
 
 const append = async (un: HTMLElement) => {
-  un.classList.add('infoline')
-  const uid = (un.parentNode as HTMLElement).dataset.uid
+  const uid = (un.parentNode.parentNode as HTMLElement).dataset.uid
+  console.debug(`直播间留言者显示粉丝数 append uid=${uid}`)
   const fans: number = await getFansCount(uid)
   const [txt, cls] = followersTextClass(fans)
   const sextag = await getSexTag(uid)
@@ -35,10 +35,10 @@ export default function () {
     successCallback: ({ selectAll }) => {
       console.debug('直播间留言者显示粉丝数 osbc in')
       for (const un of selectAll()) {
-        if (un.classList.contains('infoline')) {
-          continue
+        if (!un.classList.contains('infoline')) {
+          un.classList.add('infoline')
+          append(un)
         }
-        append(un)
       }
       console.debug('直播间留言者显示粉丝数 osbc out')
     },

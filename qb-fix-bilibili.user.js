@@ -592,8 +592,7 @@
 }
 `);
     const append = async (un) => {
-        un.classList.add('infoline');
-        const uid = un.parentNode.dataset.uid;
+        const uid = un.parentNode.parentNode.dataset.uid;
         const fans = await getFansCount(uid);
         const [txt, cls] = followersTextClass(fans);
         const sextag = await getSexTag(uid);
@@ -607,10 +606,10 @@
             selector,
             successCallback: ({ selectAll }) => {
                 for (const un of selectAll()) {
-                    if (un.classList.contains('infoline')) {
-                        continue;
+                    if (!un.classList.contains('infoline')) {
+                        un.classList.add('infoline');
+                        append(un);
                     }
-                    append(un);
                 }
             },
             stopWhenSuccess: false,
