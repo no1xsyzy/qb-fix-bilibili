@@ -249,7 +249,7 @@
             return [`${Math.round(followers / 1e2) / 10}k★`, 'followers-k'];
         }
         else {
-            return [`${followers}★`, ''];
+            return [`${followers}★`, 'followers-1'];
         }
     };
 
@@ -497,18 +497,25 @@
         return { getByIndex, getByDynamicID, getByBVID };
     }
 
+    const CARDCLS = 'Item_1EohdhbR';
+    const NAMECLS = 'Item_QAOnosoB';
     const parentNode$1 = $(`#area-tag-list`);
-    const selector$2 = `.Item_1EohdhbR`;
+    const selector$2 = `.${CARDCLS}`;
     GM_addStyle(`
-.processed::after {
+.${NAMECLS}.processed::after {
   content: attr(data-followers);
-  color: black;
 }
-.processed.followers-m::after{
-  color: purple;
+
+.${NAMECLS}.processed.followers-m {
+  color: purple !important;
 }
-.processed.followers-k::after{
-  color: red;
+
+.${NAMECLS}.processed.followers-k {
+  color: grey !important;
+}
+
+.${NAMECLS}.processed.followers-1 {
+  color: red !important;
 }
 `);
     function 分区添加粉丝数 () {
@@ -516,15 +523,16 @@
             parentNode: parentNode$1,
             selector: selector$2,
             successCallback: ({ selectAll }) => {
-                for (const a of selectAll()) {
+                for (const card of selectAll()) {
                     (async () => {
-                        const nametag = a.querySelector(`.Item_QAOnosoB`);
+                        const nametag = card.querySelector(`.${NAMECLS}`);
                         if (nametag.classList.contains('processed')) {
                             return;
                         }
-                        const followers = await getRoomFollowers(a.pathname.slice(1));
+                        const followers = await getRoomFollowers(card.pathname.slice(1));
                         const [txt, cls] = followersTextClass(followers);
                         nametag.dataset.followers = txt;
+                        nametag.title = txt;
                         nametag.classList.add('processed');
                         nametag.classList.add(cls);
                     })();

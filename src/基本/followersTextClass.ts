@@ -4,6 +4,6 @@ export const followersTextClass = (followers: number): [string, string] => {
   } else if (followers > 1e3) {
     return [`${Math.round(followers / 1e2) / 10}k★`, 'followers-k']
   } else {
-    return [`${followers}★`, '']
+    return [`${followers}★`, 'followers-1']
   }
 }
