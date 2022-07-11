@@ -227,12 +227,12 @@
     }
 
     const makeTitle$1 = () => `${($(`#area-tags header img+div`) || $(`#area-tags header h2`)).innerText} - 分区列表 - 哔哩哔哩直播`;
-    const parentNode$2 = $(`#area-tags`);
-    const selector$3 = `header`;
+    const parentNode$3 = $(`#area-tags`);
+    const selector$4 = `header`;
     function 分区标题 () {
         launchObserver({
-            parentNode: parentNode$2,
-            selector: selector$3,
+            parentNode: parentNode$3,
+            selector: selector$4,
             successCallback: () => {
                 document.title = makeTitle$1();
             },
@@ -497,10 +497,10 @@
         return { getByIndex, getByDynamicID, getByBVID };
     }
 
-    const CARDCLS = 'Item_1EohdhbR';
+    const CARDCLS$1 = 'Item_1EohdhbR';
     const NAMECLS = 'Item_QAOnosoB';
-    const parentNode$1 = $(`#area-tag-list`);
-    const selector$2 = `.${CARDCLS}`;
+    const parentNode$2 = $(`#area-tag-list`);
+    const selector$3 = `.${CARDCLS$1}`;
     GM_addStyle(`
 .${NAMECLS}.processed::after {
   content: attr(data-followers);
@@ -520,8 +520,8 @@
 `);
     function 分区添加粉丝数 () {
         launchObserver({
-            parentNode: parentNode$1,
-            selector: selector$2,
+            parentNode: parentNode$2,
+            selector: selector$3,
             successCallback: ({ selectAll }) => {
                 for (const card of selectAll()) {
                     (async () => {
@@ -542,10 +542,31 @@
         });
     }
 
+    const CARDCLS = 'Item_1EohdhbR';
+    const TITLECLS = 'Item_2GEmdhg6';
+    const parentNode$1 = $(`#area-tag-list`);
+    const selector$2 = `.${CARDCLS}`;
+    function 分区卡片直播间标题指向 () {
+        launchObserver({
+            parentNode: parentNode$1,
+            selector: selector$2,
+            successCallback: ({ selectAll }) => {
+                for (const card of selectAll()) {
+                    (async () => {
+                        const titletag = card.querySelector(`.${TITLECLS}`);
+                        titletag.title = titletag.textContent.trim();
+                    })();
+                }
+            },
+            stopWhenSuccess: false,
+        });
+    }
+
     function 分区 () {
         关注栏尺寸();
         分区标题();
         分区添加粉丝数();
+        分区卡片直播间标题指向();
     }
 
     function liveStatus() {
