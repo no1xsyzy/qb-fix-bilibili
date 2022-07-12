@@ -1,5 +1,5 @@
 import { elementEmerge, launchObserver } from '../基本/observer'
-import { trace } from 'src/基本/debug'
+import { boundaryTimeit } from 'src/基本/debug'
 import { waitAppBodyMount } from 'src/基本/waitAppBody'
 
 export async function 标签动态流() {
@@ -61,16 +61,17 @@ export async function 动态页面() {
 export async function 直播间() {
   // match: *://live.bilibili.com/blanc/:idLive
   // match: *://live.bilibili.com/:idLive
-  console.debug('动态井号标签/直播间 in')
+  const timeit = boundaryTimeit('动态井号标签/直播间')
 
   const appBody = await waitAppBodyMount
+  timeit.trace('waitAppBodyMount', waitAppBodyMount)
 
   const sectionVM = appBody.querySelector(`#sections-vm`)
-  trace('动态井号标签/直播间: sectionVM is', sectionVM)
+  timeit.trace('sectionVM', sectionVM)
   const roomFeed = sectionVM.querySelector('.room-feed') as HTMLElement
-  trace('动态井号标签/直播间: roomFeed', roomFeed)
+  timeit.trace('roomFeed', roomFeed)
   const roomFeedContent = await elementEmerge(`.room-feed-content`, roomFeed, false)
-  trace('动态井号标签/直播间: roomFeedContent', roomFeedContent)
+  timeit.trace('roomFeedContent', roomFeedContent)
 
   launchObserver({
     parentNode: roomFeedContent,
@@ -91,7 +92,7 @@ export async function 直播间() {
     stopWhenSuccess: false,
   })
 
-  console.debug('动态井号标签/直播间 out')
+  timeit.out()
 }
 
 export async function 空间() {

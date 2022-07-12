@@ -1,15 +1,16 @@
-import { $ } from './selector'
+import { betterSelector } from './selector'
 import { launchObserver } from './observer'
+import { boundaryTimeit } from './debug'
 
 export function getAppBody() {
-  return $(`.app-body`)
+  return betterSelector(document, `.app-body`).select()
 }
 
 export const waitAppBodyMount = (async function () {
-  console.debug('waitAppBodyMount in')
+  const timeit = boundaryTimeit('waitAppBodyMount')
 
-  const appBody = $(`.app-body`)
-  console.debug('waitAppBodyMount appBody', appBody)
+  const appBody = betterSelector(document, `.app-body`).select()
+  timeit.trace('appBody', appBody)
 
   if (!appBody) {
     throw new Error('activity page')
@@ -20,14 +21,13 @@ export const waitAppBodyMount = (async function () {
       parentNode: appBody,
       selector: `#sections-vm`,
       successCallback: ({ selected }) => {
-        console.debug('waitAppBodyMount selected', selected)
+        timeit.trace('selected', selected)
         resolve(null)
       },
       config: { childList: true },
     })
   })
 
-  console.debug('waitAppBodyMount resolved')
-
+  timeit.out()
   return appBody
 })()

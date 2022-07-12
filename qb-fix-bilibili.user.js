@@ -168,7 +168,7 @@
     }
 
     const waitAppBodyMount = (async function () {
-        const appBody = $(`.app-body`);
+        const appBody = betterSelector(document, `.app-body`).select();
         if (!appBody) {
             throw new Error('activity page');
         }
@@ -189,24 +189,26 @@
         GM_addStyle(`.section-content-cntr{height:calc(100vh - 250px)!important;}`);
         const sidebarVM = await (async () => {
             if (location.pathname === '/') {
-                return $(`.flying-vm`);
+                return betterSelector(document, `.flying-vm`).select();
             }
             else if (location.pathname === '/p/eden/area-tags') {
-                return $(`#area-tags`);
+                return betterSelector(document, `#area-tags`).select();
             }
             else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname)) {
                 const appBody = await waitAppBodyMount;
-                return appBody.querySelector(`#sidebar-vm`);
+                return betterSelector(appBody, `#sidebar-vm`).select();
             }
         })();
         const sidebarPopup = await elementEmerge(`.side-bar-popup-cntr`, sidebarVM);
-        attrChange({
-            node: sidebarPopup,
-            attributeFilter: ['class'],
-            callback: () => {
-            },
-            once: false,
-        });
+        // attrChange({
+        //   node: sidebarPopup,
+        //   attributeFilter: ['class'],
+        //   callback: () => {
+        //     console.debug('关注栏尺寸 osbc in')
+        //     console.debug('关注栏尺寸 osbc out')
+        //   },
+        //   once: false,
+        // })
         launchObserver({
             parentNode: sidebarPopup,
             selector: `*`,
@@ -570,7 +572,8 @@
     }
 
     function liveStatus() {
-        switch ($(`.live-status`).innerText) {
+        const liveStatus = betterSelector(document, `.live-status`).select().innerText;
+        switch (liveStatus) {
             case '直播':
                 return '▶️';
             case '闲置':
@@ -578,11 +581,11 @@
             case '轮播':
                 return '🔁';
             default:
-                return `【${$(`.live-status`).innerText}】`;
+                return `【${liveStatus}】`;
         }
     }
-    const liveTitle = () => $(`.live-title`).innerText;
-    const liveHost = () => $(`.room-owner-username`).innerText;
+    const liveTitle = () => betterSelector(document, `.live-title`).select().innerText;
+    const liveHost = () => betterSelector(document, `.room-owner-username`).select().innerText;
     const makeTitle = () => `${liveStatus()} ${liveTitle()} - ${liveHost()} - 哔哩哔哩直播`;
     const selector$1 = `.live-title`;
     async function 直播间标题 () {
@@ -607,7 +610,7 @@
 `);
     }
 
-    const parentNode = $(`#chat-items`);
+    const parentNode = betterSelector(document, `#chat-items`).select();
     const selector = `.user-name`;
     GM_addStyle(`.infoline::before{
   content: attr(data-infoline);
@@ -687,8 +690,6 @@
         });
     }
     async function 直播间$1() {
-        // match: *://live.bilibili.com/blanc/:idLive
-        // match: *://live.bilibili.com/:idLive
         const appBody = await waitAppBodyMount;
         const sectionVM = appBody.querySelector(`#sections-vm`);
         const roomFeed = sectionVM.querySelector('.room-feed');
@@ -743,11 +744,14 @@
     }
 
     async function 自动刷新崩溃直播间 () {
-        const player = $(`#live-player`);
-        const video = elementEmerge(`video`, player, false).then((x) => trace('自动刷新崩溃直播间 video', x));
-        const endingPanel = elementEmerge(`.web-player-ending-panel`, player, false).then((x) => trace('自动刷新崩溃直播间 ending_panel', x));
-        const errorPanel = elementEmerge(`.web-player-error-panel`, player, false).then((x) => trace('自动刷新崩溃直播间 error_panel', x));
+        // 延迟5秒启动
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        const player = betterSelector(document, `#live-player`).select();
+        const video = elementEmerge(`video`, player, false).then((x) => (void 0));
+        const endingPanel = elementEmerge(`.web-player-ending-panel`, player, false).then((x) => (void 0));
+        const errorPanel = elementEmerge(`.web-player-error-panel`, player, false).then((x) => (void 0));
         const last = await Promise.race([video, endingPanel, errorPanel]);
+        // const last = await elementEmerge(`video, .web-player-ending-panel, .web-player-error-panel`, player, false)
         if (last.tagName === 'VIDEO') ;
         else if (last.classList.contains('web-player-error-panel')) {
             location.reload();

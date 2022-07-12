@@ -32,7 +32,12 @@ export default (commandLineArgs) => {
   const external = []
 
   if (!configDebug) {
-    plugins.push(strip({ include: '**/*.(js|ts)' }))
+    plugins.push(
+      strip({
+        include: '**/*.(js|ts)',
+        functions: ['console.*', 'timeit.*', 'boundaryTimeit'],
+      }),
+    )
   }
 
   return {

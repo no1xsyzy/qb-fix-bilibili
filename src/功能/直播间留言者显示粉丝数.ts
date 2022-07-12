@@ -1,9 +1,10 @@
-import { $ } from '../基本/selector'
+import { betterSelector } from '../基本/selector'
 import { launchObserver } from '../基本/observer'
 import { getSexTag, getFansCount } from '../基本/bapi'
 import { followersTextClass } from '../基本/followersTextClass'
+import { timeit } from 'src/基本/debug'
 
-const parentNode = $(`#chat-items`)
+const parentNode = betterSelector(document, `#chat-items`).select()
 const selector = `.user-name`
 
 GM_addStyle(`.infoline::before{
@@ -34,13 +35,16 @@ export default function () {
     selector,
     successCallback: ({ selectAll }) => {
       console.debug('直播间留言者显示粉丝数 osbc in')
+      const time = timeit()
+
       for (const un of selectAll()) {
         if (!un.classList.contains('infoline')) {
           un.classList.add('infoline')
           append(un)
         }
       }
-      console.debug('直播间留言者显示粉丝数 osbc out')
+
+      console.debug('直播间留言者显示粉丝数 osbc out', time())
     },
     stopWhenSuccess: false,
   })
