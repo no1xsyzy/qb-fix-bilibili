@@ -4,7 +4,7 @@
 // @namespace   no1xsyzy
 // @match       https://*.bilibili.com/*
 // @license     Apache License, Version 2.0 (Apache-2.0); https://opensource.org/licenses/Apache-2.0
-// @version     0.0.16
+// @version     0.0.17
 // @author      inQ_Beta
 // @grant       GM_addStyle
 // ==/UserScript==
@@ -919,6 +919,20 @@
         标签动态流$1();
     }
 
+    async function 动态标题供搜索 () {
+        const dyn = await elementEmerge(`.bili-rich-text`, document);
+        const uname = $(`.bili-dyn-title>span`).textContent.trim();
+        const dtime = $(`.bili-dyn-time`).textContent.trim();
+        const dcont = dyn.textContent.trim();
+        const ddisp = dcont.length > 23 ? dcont.slice(0, 20) + '...' : dcont;
+        document.title = `${uname} 于 ${dtime} 说道：『${ddisp}』-哔哩哔哩`;
+    }
+
+    function 单条动态页面 () {
+        动态页面$1();
+        动态标题供搜索();
+    }
+
     if (location.host === 'live.bilibili.com') {
         if (location.pathname === '/') {
             直播主页();
@@ -937,6 +951,9 @@
     else if (location.host === 't.bilibili.com') {
         if (/\/topic\/name\/[^/]+\/feed/.exec(location.pathname)) {
             标签动态流();
+        }
+        else if (/\/\d+/.exec(location.pathname)) {
+            单条动态页面();
         }
         else {
             动态页面();

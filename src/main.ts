@@ -5,6 +5,7 @@ import 其他页面 from './路由/其他页面'
 import 动态页面 from './路由/动态页面'
 import 空间 from './路由/空间'
 import 标签动态流 from './路由/标签动态流'
+import 单条动态页面 from './路由/单条动态页面'
 import { $ } from './基本/selector'
 
 if (location.host === 'live.bilibili.com') {
@@ -28,6 +29,9 @@ if (location.host === 'live.bilibili.com') {
   if (/\/topic\/name\/[^/]+\/feed/.exec(location.pathname)) {
     console.debug('路由: 标签动态流')
     标签动态流()
+  } else if (/\/\d+/.exec(location.pathname)) {
+    console.debug('路由: 单条动态页面')
+    单条动态页面()
   } else {
     console.debug('路由: 动态页面')
     动态页面()
