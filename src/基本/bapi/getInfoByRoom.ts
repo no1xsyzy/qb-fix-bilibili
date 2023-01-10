@@ -14,7 +14,11 @@ interface RoomInfoData {
   anchor_info: AnchorInfo
 }
 
-export const getInfoByRoom = timedLRU<RoomID, RoomInfoData>(
+interface RoomInfoCache {
+  followers: number
+}
+
+export const getInfoByRoom = timedLRU<RoomID, RoomInfoCache>(
   async (roomid: RoomID) => {
     const json: Response<RoomInfoData> = await (
       await fetch(`https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=${roomid}`, {
@@ -26,19 +30,20 @@ export const getInfoByRoom = timedLRU<RoomID, RoomInfoData>(
         mode: 'cors',
       })
     ).json()
-    if (json.code === 0) {
-      return json.data
-    } else {
+    if (json.code !== 0) {
       throw json.message
     }
+    const followers = json.data.anchor_info.relation_info.attention
+    return { followers }
   },
   {
     id: 'getInfoByRoom',
+    version: 2,
     ttl: 86400 * 1000,
-    cacheStorageFactory: localStorageCacheStorageFactory as cacheStorageFactory<RoomID, RoomInfoData>,
+    cacheStorageFactory: localStorageCacheStorageFactory as cacheStorageFactory<RoomID, RoomInfoCache>,
   },
 )
 
 export const getRoomFollowers = async (roomid: RoomID) => {
-  return (await getInfoByRoom(roomid)).anchor_info.relation_info.attention
+  return (await getInfoByRoom(roomid)).followers
 }

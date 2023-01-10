@@ -361,19 +361,19 @@
             method: 'GET',
             mode: 'cors',
         })).json();
-        if (json.code === 0) {
-            return json.data;
-        }
-        else {
+        if (json.code !== 0) {
             throw json.message;
         }
+        const followers = json.data.anchor_info.relation_info.attention;
+        return { followers };
     }, {
         id: 'getInfoByRoom',
+        version: 2,
         ttl: 86400 * 1000,
         cacheStorageFactory: localStorageCacheStorageFactory,
     });
     const getRoomFollowers = async (roomid) => {
-        return (await getInfoByRoom(roomid)).anchor_info.relation_info.attention;
+        return (await getInfoByRoom(roomid)).followers;
     };
 
     async function* getDynamicFeed({ timezone = -480, type = 'all', }) {
