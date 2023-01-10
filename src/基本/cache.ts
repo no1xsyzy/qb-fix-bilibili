@@ -4,10 +4,11 @@ export interface cacheStorage<K, V> {
   cleanup(ttl: number, now: number): void
 }
 
-export type cacheStorageFactory<K, V> = (id: string) => cacheStorage<K, V>
+export type cacheStorageFactory<K, V> = (id: string, version: number) => cacheStorage<K, V>
 
 export interface timedLRUSpec<K, V> {
   id: string
+  version?: number
   ttl?: number
   cleanupInterval?: number
   cacheStorageFactory?: cacheStorageFactory<K, V>
@@ -40,12 +41,13 @@ export function timedLRU<K, V>(
   func: (k: K) => V | Promise<V>,
   {
     id,
+    version = 1,
     ttl = 10 * 60 * 1000,
     cleanupInterval = 60 * 1000,
     cacheStorageFactory = defaultCacheStorageFactory,
   }: timedLRUSpec<K, V>,
 ): LRUfunction<K, Promise<V>> {
-  const cacheStorage = cacheStorageFactory(id)
+  const cacheStorage = cacheStorageFactory(id, version)
   let timeout = null
 
   const cleanup = () => {

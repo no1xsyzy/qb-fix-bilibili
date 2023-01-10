@@ -272,8 +272,8 @@
         };
         return { get, set, cleanup };
     }
-    function timedLRU(func, { id, ttl = 10 * 60 * 1000, cleanupInterval = 60 * 1000, cacheStorageFactory = defaultCacheStorageFactory, }) {
-        const cacheStorage = cacheStorageFactory(id);
+    function timedLRU(func, { id, version = 1, ttl = 10 * 60 * 1000, cleanupInterval = 60 * 1000, cacheStorageFactory = defaultCacheStorageFactory, }) {
+        const cacheStorage = cacheStorageFactory(id, version);
         let timeout = null;
         const cleanup = () => {
             if (timeout !== null) {
@@ -296,10 +296,10 @@
         return wrapped;
     }
 
-    function localStorageCacheStorageFactory(id) {
-        const get = (key) => JSON.parse(localStorage.getItem(`cacheStore__${id}__${key}`)) ?? [0, undefined];
+    function localStorageCacheStorageFactory(id, version) {
+        const get = (key) => JSON.parse(localStorage.getItem(`cacheStore__${id}__${version}__${key}`)) ?? [0, undefined];
         const set = (key, time, value) => {
-            localStorage.setItem(`cacheStore__${id}__${key}`, JSON.stringify([time, value]));
+            localStorage.setItem(`cacheStore__${id}__${version}__${key}`, JSON.stringify([time, value]));
         };
         const cleanup = (ttl, now) => {
             for (let i = 0; i < localStorage.length; i++) {
@@ -307,7 +307,8 @@
                 if (!k.startsWith(`cacheStore__${id}__`)) {
                     continue;
                 }
-                const [t, v] = JSON.parse(localStorage.getItem(k));
+                if (!k.startsWith(`cacheStore__${id}__${version}__`)) ;
+                const [t, _] = JSON.parse(localStorage.getItem(k));
                 if (t + ttl < now) {
                     localStorage.removeItem(k);
                 }
@@ -325,23 +326,23 @@
             method: 'GET',
             mode: 'cors',
         })).json();
-        if (json.code === 0) {
-            return json.data;
-        }
-        else {
+        if (json.code !== 0) {
             throw json.message;
         }
+        const { data: { card: { fans, sex }, }, } = json;
+        return { fans, gender: sex };
     }, {
         id: 'getCard',
+        version: 2,
         ttl: 86400 * 1000,
         cacheStorageFactory: localStorageCacheStorageFactory,
     });
     const getFansCount = async (uid) => {
-        return (await getCard(uid)).card.fans;
+        return (await getCard(uid)).fans;
     };
     const getSexTag = async (uid) => {
-        const sex = (await getCard(uid)).card.sex;
-        switch (sex) {
+        const { gender } = await getCard(uid);
+        switch (gender) {
             case '男':
                 return '♂';
             case '女':
