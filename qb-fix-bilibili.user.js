@@ -16,6 +16,7 @@
     }
 
     const $ = (x) => document.querySelector(x);
+    const $$ = (x) => Array.from(document.querySelectorAll(x));
     function betterSelector(parentNode, selector) {
         // `.class-name`
         const className = /^\.([\w_-]+)$/.exec(selector);
@@ -743,6 +744,13 @@
             stopWhenSuccess: false,
         });
     }
+    async function opus$2() {
+        for (const anchor of $$(`.topic`)) {
+            if (/#.+#/.exec(anchor.innerHTML) && /https?:\/\/search.bilibili.com\/all\?.+/.exec(anchor.href)) {
+                anchor.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(anchor.innerHTML)[1]}/feed`;
+            }
+        }
+    }
 
     async function 自动刷新崩溃直播间 () {
         // 延迟5秒启动
@@ -920,7 +928,7 @@
         标签动态流$1();
     }
 
-    async function 动态标题供搜索 () {
+    async function 单条动态页面$1() {
         const dyn = await elementEmerge(`.bili-rich-text`, document);
         const uname = $(`.bili-dyn-title>span`).textContent.trim();
         const dtime = $(`.bili-dyn-time`).textContent.trim();
@@ -928,10 +936,22 @@
         const ddisp = dcont.length > 23 ? dcont.slice(0, 20) + '...' : dcont;
         document.title = `${uname} 于 ${dtime} 说道：『${ddisp}』-哔哩哔哩`;
     }
+    async function opus$1() {
+        const uname = $(`.opus-module-author__name`).textContent.trim();
+        const dtime = $(`.opus-module-author__pub__text`).textContent.trim();
+        const dcont = $(`.opus-module-content`).textContent.trim();
+        const ddisp = dcont.length > 23 ? dcont.slice(0, 20) + '...' : dcont;
+        document.title = `${uname} 于 ${dtime} 说道：『${ddisp}』-哔哩哔哩`;
+    }
 
     function 单条动态页面 () {
         动态页面$1();
-        动态标题供搜索();
+        单条动态页面$1();
+    }
+
+    function opus () {
+        opus$2();
+        opus$1();
     }
 
     if (location.host === 'live.bilibili.com') {
@@ -958,6 +978,11 @@
         }
         else {
             动态页面();
+        }
+    }
+    else if (location.host === 'www.bilibili.com') {
+        if (/^\/opus\//.exec(location.pathname)) {
+            opus();
         }
     }
     else ;

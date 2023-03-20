@@ -6,6 +6,7 @@ import 动态页面 from './路由/动态页面'
 import 空间 from './路由/空间'
 import 标签动态流 from './路由/标签动态流'
 import 单条动态页面 from './路由/单条动态页面'
+import opus from './路由/opus'
 import { $ } from './基本/selector'
 
 if (location.host === 'live.bilibili.com') {
@@ -35,6 +36,11 @@ if (location.host === 'live.bilibili.com') {
   } else {
     console.debug('路由: 动态页面')
     动态页面()
+  }
+} else if (location.host === 'www.bilibili.com') {
+  if (/^\/opus\//.exec(location.pathname)) {
+    console.debug('路由: opus')
+    opus()
   }
 } else {
   console.debug('路由: 其他页面')

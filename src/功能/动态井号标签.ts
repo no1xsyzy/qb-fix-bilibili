@@ -1,6 +1,7 @@
 import { elementEmerge, launchObserver } from '../基本/observer'
 import { boundaryTimeit } from 'src/基本/debug'
 import { waitAppBodyMount } from 'src/基本/waitAppBody'
+import { $$ } from 'src/基本/selector'
 
 export async function 标签动态流() {
   console.debug('动态井号标签/动态标签流 in')
@@ -136,4 +137,12 @@ export async function 空间() {
   })
 
   console.debug('动态井号标签/空间 out')
+}
+
+export async function opus() {
+  for (const anchor of $$(`.topic`) as HTMLAnchorElement[]) {
+    if (/#.+#/.exec(anchor.innerHTML) && /https?:\/\/search.bilibili.com\/all\?.+/.exec(anchor.href)) {
+      anchor.href = `https://t.bilibili.com/topic/name/${/#(.+)#/.exec(anchor.innerHTML)[1]}/feed`
+    }
+  }
 }
