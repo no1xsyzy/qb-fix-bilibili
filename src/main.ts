@@ -8,6 +8,7 @@ import 标签动态流 from './路由/标签动态流'
 import 单条动态页面 from './路由/单条动态页面'
 import opus from './路由/opus'
 import { $ } from './基本/selector'
+import 粉丝勋章页 from './路由/粉丝勋章页'
 
 if (location.host === 'live.bilibili.com') {
   if (location.pathname === '/') {
@@ -16,6 +17,9 @@ if (location.host === 'live.bilibili.com') {
   } else if (location.pathname === '/p/eden/area-tags') {
     console.debug('路由: 分区')
     分区()
+  } else if (location.pathname === '/p/html/live-fansmedal-wall/') {
+    console.debug('路由: 粉丝勋章页')
+    粉丝勋章页()
   } else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname) && $(`.app-body`)) {
     console.debug('路由: 直播间')
     直播间()

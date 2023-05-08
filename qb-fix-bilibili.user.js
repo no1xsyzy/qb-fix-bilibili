@@ -954,12 +954,29 @@
         opus$1();
     }
 
+    async function 排序粉丝勋章 () {
+        const list = await elementEmerge(`.medalList .list`);
+        Array.from(list.children)
+            .sort((a, b) => betterSelector(b, '.btn').selectAll().length - betterSelector(a, '.btn').selectAll().length ||
+            betterSelector(b, '.living').selectAll().length - betterSelector(a, '.living').selectAll().length ||
+            +betterSelector(b, '.m-medal__fans-medal-level').select().textContent -
+                +betterSelector(a, '.m-medal__fans-medal-level').select().textContent)
+            .forEach((node) => list.appendChild(node));
+    }
+
+    function 粉丝勋章页 () {
+        排序粉丝勋章();
+    }
+
     if (location.host === 'live.bilibili.com') {
         if (location.pathname === '/') {
             直播主页();
         }
         else if (location.pathname === '/p/eden/area-tags') {
             分区();
+        }
+        else if (location.pathname === '/p/html/live-fansmedal-wall/') {
+            粉丝勋章页();
         }
         else if (/^(?:\/blanc)?\/(\d+)$/.exec(location.pathname) && $(`.app-body`)) {
             直播间();
