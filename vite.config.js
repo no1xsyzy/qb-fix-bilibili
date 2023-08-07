@@ -1,9 +1,17 @@
 import { defineConfig } from 'vite'
 import Userscript from 'vite-userscript-plugin'
 import { name, version, description, license, author } from './package.json'
+import strip from '@rollup/plugin-strip'
 
 export default defineConfig(({ mode }) => ({
   plugins: [
+    {
+      ...strip({
+        include: '**/*.(js|ts)',
+        functions: ['console.*', 'timeit.*', 'boundaryTimeit'],
+      }),
+      apply: 'build',
+    },
     Userscript({
       entry: 'src/main.ts',
       header: {
