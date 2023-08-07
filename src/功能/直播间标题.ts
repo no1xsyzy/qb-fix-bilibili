@@ -1,6 +1,6 @@
 import { betterSelector } from '../基本/selector'
 import { elementEmerge, launchObserver } from '../基本/observer'
-import { boundaryTimeit } from 'src/基本/debug'
+import { boundaryTimeit } from '../基本/debug'
 
 function liveStatus() {
   const liveStatus = betterSelector(document, `.live-status`).select().innerText

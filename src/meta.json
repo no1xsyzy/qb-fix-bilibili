@@ -1,6 +1,0 @@
-{
-  "match": "https://*.bilibili.com/*",
-  "namespace": "no1xsyzy",
-  "license": "Apache License, Version 2.0 (Apache-2.0); https://opensource.org/licenses/Apache-2.0",
-  "grant": ["GM_addStyle"]
-}

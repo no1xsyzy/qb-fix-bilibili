@@ -2,7 +2,7 @@ import { betterSelector } from '../基本/selector'
 import { launchObserver } from '../基本/observer'
 import { getSexTag, getFansCount } from '../基本/bapi'
 import { followersTextClass } from '../基本/followersTextClass'
-import { timeit } from 'src/基本/debug'
+import { timeit } from '../基本/debug'
 
 const parentNode = betterSelector(document, `#chat-items`).select()
 const selector = `.user-name`

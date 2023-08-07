@@ -1,5 +1,5 @@
-import { elementEmerge } from 'src/基本/observer'
-import { betterSelector } from 'src/基本/selector'
+import { elementEmerge } from '../基本/observer'
+import { betterSelector } from '../基本/selector'
 
 export default async function () {
   console.debug('排序粉丝勋章 in')

@@ -1,4 +1,4 @@
-import { attrChange, elementEmerge, launchObserver } from 'src/基本/observer'
+import { attrChange, elementEmerge, launchObserver } from '../基本/observer'
 
 export default async function () {
   console.debug('分离视频类型 in')

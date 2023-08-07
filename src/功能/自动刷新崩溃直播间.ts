@@ -1,6 +1,6 @@
-import { boundaryTimeit } from 'src/基本/debug'
-import { elementEmerge } from 'src/基本/observer'
-import { betterSelector } from 'src/基本/selector'
+import { boundaryTimeit } from '../基本/debug'
+import { elementEmerge } from '../基本/observer'
+import { betterSelector } from '../基本/selector'
 
 export default async function () {
   // 延迟5秒启动

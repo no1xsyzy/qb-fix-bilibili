@@ -1,5 +1,5 @@
 import { elementEmerge } from '../基本/observer'
-import { $ } from 'src/基本/selector'
+import { $ } from '../基本/selector'
 
 export async function 单条动态页面() {
   console.debug('动态标题供搜索.单条动态页面 in')

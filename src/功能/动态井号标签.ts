@@ -1,7 +1,7 @@
 import { elementEmerge, launchObserver } from '../基本/observer'
-import { boundaryTimeit } from 'src/基本/debug'
-import { waitAppBodyMount } from 'src/基本/waitAppBody'
-import { $$ } from 'src/基本/selector'
+import { boundaryTimeit } from '../基本/debug'
+import { waitAppBodyMount } from '../基本/waitAppBody'
+import { $$ } from '../基本/selector'
 
 export async function 标签动态流() {
   console.debug('动态井号标签/动态标签流 in')
