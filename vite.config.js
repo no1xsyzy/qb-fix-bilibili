@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
     {
       ...strip({
         include: '**/*.(js|ts)',
-        functions: ['console.*', 'timeit.*', 'boundaryTimeit'],
+        functions: ['console.*', 'timeit.*', 'timeit2.*', 'boundaryTimeit'],
       }),
       apply: 'build',
     },

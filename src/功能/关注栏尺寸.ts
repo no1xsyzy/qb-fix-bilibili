@@ -6,7 +6,12 @@ import { waitAppBodyMount } from '../基本/waitAppBody'
 export default async function () {
   const timeit = boundaryTimeit('关注栏尺寸')
 
-  GM_addStyle(`.section-content-cntr{height:calc(100vh - 250px)!important;}`)
+  GM_addStyle(`
+  .section-content-cntr{height:calc(100vh - 250px)!important;}
+  .follow-cntr{height:calc(100vh - 150px)!important;}
+  .follow-cntr>.anchor-list{height:auto!important;}
+  .follow-cntr>.anchor-list>.three-anchor{height:auto!important;}
+  `)
 
   console.debug('关注栏尺寸 css')
 
@@ -50,7 +55,7 @@ export default async function () {
         sidebarPopup.style.height = 'calc(100vh - 150px)'
         // selected.style.height = "600px"
       }
-      setTimeout(() => $(`.side-bar-popup-cntr.ts-dot-4 .ps`)?.dispatchEvent(new Event('scroll')), 1000)
+      setTimeout(() => $(`.side-bar-popup-cntr.ts-dot-4 .ps`)?.dispatchEvent(new Event('scroll')), 2000)
       timeit.out()
     },
     stopWhenSuccess: false,
