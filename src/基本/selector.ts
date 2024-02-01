@@ -55,3 +55,11 @@ export function betterSelector<T extends HTMLElement>(
       trace(`betterSelector("${selector}").selectAll#qs`, Array.from(parentNode.querySelectorAll(selector))),
   }
 }
+
+export function selectAncestor(childNode: HTMLElement, selector: string): HTMLElement | null {
+  let p: HTMLElement | null = childNode
+  while (p != null && !p.matches(selector)) {
+    p = p.parentElement
+  }
+  return p
+}
