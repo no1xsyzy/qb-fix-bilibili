@@ -3,15 +3,8 @@ import Userscript from 'vite-userscript-plugin'
 import { name, version, description, license, author } from './package.json'
 import strip from '@rollup/plugin-strip'
 
-export default defineConfig(({ mode }) => ({
-  plugins: [
-    {
-      ...strip({
-        include: '**/*.(js|ts)',
-        functions: ['console.*', 'timeit.*', 'timeit2.*', 'boundaryTimeit'],
-      }),
-      apply: 'build',
-    },
+export default defineConfig(({ mode }) => {
+  const plugins = [
     Userscript({
       entry: 'src/main.ts',
       header: {
@@ -30,5 +23,19 @@ export default defineConfig(({ mode }) => ({
         charset: 'utf8',
       },
     }),
-  ],
-}))
+  ]
+
+  if (mode !== 'development') {
+    plugins.unshift({
+      ...strip({
+        include: '**/*.(js|ts)',
+        functions: ['console.*', 'timeit.*', 'timeit2.*', 'boundaryTimeit'],
+      }),
+      apply: 'build',
+    })
+  }
+
+  return {
+    plugins,
+  }
+})
