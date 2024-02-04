@@ -11,6 +11,8 @@
   "plugins": ["@typescript-eslint"],
   "ignorePatterns": ["qb-fix-bilibili.user.js", "**/*.d.ts"],
   "globals": {
-    "GM_addStyle": "readonly"
+    "GM_addStyle": "readonly",
+    "unsafeWindow": "readonly",
+    "GM_notification": "readonly"
   }
 }
