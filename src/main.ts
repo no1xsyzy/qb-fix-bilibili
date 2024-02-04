@@ -9,6 +9,7 @@ import 单条动态页面 from './路由/单条动态页面'
 import opus from './路由/opus'
 import { $ } from './基本/selector'
 import 粉丝勋章页 from './路由/粉丝勋章页'
+import 专栏 from './路由/专栏'
 
 if (location.host === 'live.bilibili.com') {
   if (location.pathname === '/') {
@@ -24,7 +25,7 @@ if (location.host === 'live.bilibili.com') {
     console.debug('路由: 直播间')
     直播间()
   } else {
-    console.debug('路由: 其他页面 无可用行动')
+    console.debug(`路由: 未知live页面path='${location.pathname}' 无可用行动`)
     // 其他页面()
   }
 } else if (location.host === 'space.bilibili.com') {
@@ -42,8 +43,11 @@ if (location.host === 'live.bilibili.com') {
   if (/^\/opus\//.exec(location.pathname)) {
     console.debug('路由: opus')
     opus()
+  } else if (location.pathname.startsWith('/read/cv')) {
+    console.debug('路由：专栏')
+    专栏()
   }
 } else {
-  console.debug('路由: 其他页面 无可用行动')
+  console.debug(`路由: 未知host='${location.host}' 无可用行动`)
   // 其他页面()
 }
