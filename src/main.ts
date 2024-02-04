@@ -1,10 +1,10 @@
 import 分区 from './路由/分区'
 import 直播间 from './路由/直播间'
 import 直播主页 from './路由/直播主页'
-import 其他页面 from './路由/其他页面'
+// import 其他页面 from './路由/其他页面'
 import 动态页面 from './路由/动态页面'
-import 空间 from './路由/空间'
-import 标签动态流 from './路由/标签动态流'
+// import 空间 from './路由/空间'
+// import 标签动态流 from './路由/标签动态流'
 import 单条动态页面 from './路由/单条动态页面'
 import opus from './路由/opus'
 import { $ } from './基本/selector'
@@ -24,17 +24,14 @@ if (location.host === 'live.bilibili.com') {
     console.debug('路由: 直播间')
     直播间()
   } else {
-    console.debug('路由: 其他页面')
-    其他页面()
+    console.debug('路由: 其他页面 无可用行动')
+    // 其他页面()
   }
 } else if (location.host === 'space.bilibili.com') {
-  console.debug('路由: 空间')
-  空间()
+  console.debug('路由: 空间 无可用行动')
+  // 空间()
 } else if (location.host === 't.bilibili.com') {
-  if (/\/topic\/name\/[^/]+\/feed/.exec(location.pathname)) {
-    console.debug('路由: 标签动态流')
-    标签动态流()
-  } else if (/\/\d+/.exec(location.pathname)) {
+  if (/\/\d+/.exec(location.pathname)) {
     console.debug('路由: 单条动态页面')
     单条动态页面()
   } else {
@@ -47,6 +44,6 @@ if (location.host === 'live.bilibili.com') {
     opus()
   }
 } else {
-  console.debug('路由: 其他页面')
-  其他页面()
+  console.debug('路由: 其他页面 无可用行动')
+  // 其他页面()
 }
