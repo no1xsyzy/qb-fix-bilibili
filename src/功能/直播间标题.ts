@@ -3,17 +3,14 @@ import { elementEmerge, launchObserver } from '../基本/observer'
 import { boundaryTimeit } from '../基本/debug'
 
 function liveStatus() {
-  const liveStatus = betterSelector(document, `.live-status`).select().innerText
-  switch (liveStatus) {
-    case '直播':
-      return '▶️'
-    case '闲置':
-      return '⏹️'
-    case '轮播':
-      return '🔁'
-    default:
-      return `【${liveStatus}】`
+  const livePlayer = betterSelector(document, `#live-player`).select()
+  const video = betterSelector(livePlayer, `video`).select()
+  if (typeof video === 'undefined') {
+    return '⏹️'
+  } else {
+    return '▶️'
   }
+  // TODO: 轮播 return '🔁'
 }
 
 const liveTitle = () => betterSelector(document, `.live-title`).select().innerText
