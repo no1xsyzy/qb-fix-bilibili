@@ -13,6 +13,7 @@ let recentErrors = 0
 setInterval(() => {
   if (recentErrors > 0) {
     recentErrors /= 2
+    console.log(`真原画 recentErrors=${recentErrors} t=${new Date().getTime()}`)
   }
 }, 10000)
 
@@ -22,11 +23,12 @@ function healthChecker(promise: Promise<Response>): void {
     if (!response.url.match(/\.(m3u8|m4s)/)) return
     if (response.status >= 400 && response.status < 500) {
       recentErrors++
+      console.log(`真原画 recentErrors=${recentErrors} t=${new Date().getTime()}`)
       if (recentErrors >= 5 && forceHighestQuality) {
         forceHighestQuality = false
         GM_notification({
-          title: '真原画',
-          text: '最高清晰度可能不可用，取消强制',
+          title: 'qb-fix-bilibili',
+          text: '真原画可能不可用，取消强制',
           timeout: 3000,
           silent: true,
         })
