@@ -11,6 +11,7 @@ export default async function () {
   .follow-cntr{height:calc(100vh - 150px)!important;}
   .follow-cntr>.anchor-list{height:auto!important;}
   .follow-cntr>.anchor-list>.three-anchor{height:auto!important;}
+  .side-bar-popup-cntr {bottom: 120px !important;height: calc( 100% - 240px ) !important;}
   `)
 
   console.debug('关注栏尺寸 css')
