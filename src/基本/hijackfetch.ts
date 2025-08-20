@@ -1,3 +1,5 @@
+import config from 'eslint-config-standard-with-typescript'
+
 const oldFetch = unsafeWindow.fetch
 
 type FetchLike = (input: Request) => Promise<Response>
@@ -12,7 +14,7 @@ type Middleware =
 
 const middlewares: Middleware[] = []
 
-unsafeWindow.fetch = function (input: RequestInfo | URL, init: RequestInit = {}) {
+unsafeWindow.fetch = function (input: RequestInfo, init: RequestInit = {}) {
   const request = new Request(input, init)
   return processFetchWithMiddlewares(middlewares)(request)
 }
@@ -23,12 +25,13 @@ const processFetchWithMiddlewares = function (middlewares: Middleware[]): FetchL
   }
   const [head, ...tail] = middlewares
   const next = processFetchWithMiddlewares(tail)
-  if (head.type === 'before') {
-    return (input: Request) => next(head.func(input))
-  } else if (head.type === 'after') {
-    return (input: Request) => head.func(next(input))
-  } else if (head.type === 'wrap') {
-    return (input: Request) => head.func(next, input)
+  switch (head.type) {
+    case 'before':
+      return (input: Request) => next(head.func(input))
+    case 'after':
+      return (input: Request) => head.func(next(input))
+    case 'wrap':
+      return (input: Request) => head.func(next, input)
   }
 }
 
