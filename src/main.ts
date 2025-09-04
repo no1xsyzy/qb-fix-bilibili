@@ -10,6 +10,7 @@ import opus from './路由/opus'
 import { $ } from './基本/selector'
 import 粉丝勋章页 from './路由/粉丝勋章页'
 import 专栏 from './路由/专栏'
+import 视频页 from './路由/视频页'
 
 if (location.host === 'live.bilibili.com') {
   if (location.pathname === '/') {
@@ -46,6 +47,9 @@ if (location.host === 'live.bilibili.com') {
   } else if (location.pathname.startsWith('/read/cv')) {
     console.debug('路由：专栏')
     专栏()
+  } else if (location.pathname.startsWith('/video/')) {
+    console.debug('路由：视频')
+    视频页()
   }
 } else {
   console.debug(`路由: 未知host='${location.host}' 无可用行动`)
