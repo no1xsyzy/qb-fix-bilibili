@@ -1,5 +1,3 @@
-import config from 'eslint-config-standard-with-typescript'
-
 const oldFetch = unsafeWindow.fetch
 
 type FetchLike = (input: Request) => Promise<Response>
